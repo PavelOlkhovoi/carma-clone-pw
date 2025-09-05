@@ -1,0 +1,27 @@
+{
+  "name": "e2e-verdis-desktop",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/verdis/verdis-desktop/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["verdis-desktop"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "e2e/verdis/verdis-desktop/playwright.config.ts"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "verdis-desktop:serve:production"
+        },
+        "ci": {
+          "devServerTarget": "verdis-desktop:serve-static"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "e2e-stadtplan",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/topicmaps/stadtplan/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["stadtplan"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "e2e/topicmaps/stadtplan/playwright.config.ts"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "stadtplan:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

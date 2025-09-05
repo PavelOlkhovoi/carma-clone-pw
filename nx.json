@@ -1,0 +1,163 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "e2e": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production"
+      ]
+    },
+    "@nx/vite:test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production"
+      ],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "build-storybook": {
+      "cache": true,
+      "options": {
+        "loglevel": "verbose"
+      },
+      "inputs": [
+        "default",
+        "^production",
+        "{projectRoot}/.storybook/**/*",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/tsconfig.storybook.json"
+      ]
+    },
+    "@nx/eslint:lint": {
+      "cache": true,
+      "options": {
+        "eslintConfig": "{workspaceRoot}/eslint.config.cjs"
+      }
+    },
+    "@nx/vite:build": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "@nx/jest:jest": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js"
+      ],
+      "options": {
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "@nx/esbuild:esbuild": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    }
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/.storybook/**/*",
+      "!{projectRoot}/src/e2e/**/*",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/tsconfig.storybook.json",
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+      "!{projectRoot}/playwright.config.@(js|cjs|mjs|ts|cts|mts)",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/eslint.config.@(js|cjs|mjs|ts|cts|mts)",
+      "!{projectRoot}/src/setupTests.[jt]s",
+      "!{projectRoot}/src/setup-tests.[jt]s",
+      "!{projectRoot}/src/test-setup.[jt]s"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/tailwind.preset.@(js|cjs|mjs|ts)",
+      "{workspaceRoot}/tsconfig.base.json"
+    ]
+  },
+  "generators": {
+    "@nx/react": {
+      "application": {
+        "babel": true,
+        "bundler": "vite",
+        "linter": "eslint",
+        "skipFormat": true,
+        "style": "css"
+      },
+      "component": {
+        "style": "css"
+      },
+      "library": {
+        "bundler": "none",
+        "linter": "eslint",
+        "skipFormat": true,
+        "skipTsConfig": true,
+        "style": "css",
+        "unitTestRunner": "vitest"
+      }
+    },
+    "@nx/js": {
+      "library": {
+        "bundler": "none",
+        "linter": "eslint",
+        "skipFormat": true,
+        "skipTsConfig": true,
+        "unitTestRunner": "vitest"
+      }
+    }
+  },
+  "nxCloudAccessToken": "OTZiNTQ5MjMtM2NjZi00ZTg0LTlhMjYtYWYwNzU3NDlkOTNjfHJlYWQ=",
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {}
+    }
+  },
+  "useInferencePlugins": false,
+  "defaultBase": "dev",
+  "useLegacyCache": true
+}

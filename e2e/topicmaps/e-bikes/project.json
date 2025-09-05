@@ -1,0 +1,24 @@
+{
+  "name": "e2e-e-bikes",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/topicmaps/e-bikes/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["e-bikes"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "e2e/topicmaps/e-bikes/playwright.config.ts"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "e-bikes:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "e2e-baederkarte",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/topicmaps/baederkarte/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["baederkarte"],
+"targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "e2e/topicmaps/baederkarte/playwright.config.ts"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "baederkarte:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

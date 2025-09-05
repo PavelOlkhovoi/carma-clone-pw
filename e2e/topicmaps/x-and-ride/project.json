@@ -1,0 +1,24 @@
+{
+  "name": "e2e-x-and-ride",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/topicmaps/x-and-ride/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["x-and-ride"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "e2e/topicmaps/x-and-ride/playwright.config.ts"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "x-and-ride:serve:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

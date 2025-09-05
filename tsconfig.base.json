@@ -1,0 +1,36 @@
+{
+  "extends": "./tsconfig.base.options.json",
+  "compileOnSave": false,
+  "include": [
+    "${configDir}/src/**/*.js",
+    "${configDir}/src/**/*.ts",
+    "${configDir}/src/**/*.jsx",
+    "${configDir}/src/**/*.tsx",
+    "${configDir}/*.config.js",
+    "${configDir}/*.config.ts",
+    "${configDir}/*.config.cjs",
+    "${configDir}/*.config.mjs",
+    "${configDir}/*.config.mts",
+    "types/**/*.d.ts"
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": ".",
+    "types": [
+      "vite/client",
+      "node",
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts",
+      "@nx/react/typings/styled-jsx.d.ts"
+    ],
+    "paths": {
+      "@carma-appframeworks/*": ["libraries/appframeworks/*/src/index.ts"],
+      "@carma-collab/pecher/*": ["libraries/collaboration/carma-pecher-collab/src/*/index.jsx"],
+      "@carma-collab/wuppertal/*": ["libraries/collaboration/carma-wuppertal-collab/src/*/index.ts"],
+      "@carma-commons/*": ["libraries/commons/*/src/index.ts"],
+      "@carma-commons/utils/*": ["libraries/commons/utils/src/lib/*"],
+      "@carma-mapping/*": ["libraries/mapping/*/src/index.ts"],
+    },
+    "skipLibCheck": true
+  }
+}

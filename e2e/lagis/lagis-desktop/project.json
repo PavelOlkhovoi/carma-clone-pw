@@ -1,0 +1,27 @@
+{
+  "name": "e2e-lagis-desktop",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/lagis/lagis-desktop/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["lagis-desktop"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "e2e/lagis/lagis-desktop/playwright.config.ts"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "lagis-desktop:serve:production"
+        },
+        "ci": {
+          "devServerTarget": "lagis-desktop:serve-static"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

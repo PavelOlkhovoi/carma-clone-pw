@@ -281,5 +281,17 @@ jobs:
       - name: Install Nx globally
         run: npm install -g nx
 
+      - name: Check if E2E target exists
+        id: check-e2e
+        run: |
+          if npx nx show project e2e-${{ github.event.inputs.project-name }} --json 2>/dev/null | jq -e '.targets.e2e' > /dev/null; then
+            echo "has-e2e=true" >> $GITHUB_OUTPUT
+            echo "✅ E2E target found for e2e-${{ github.event.inputs.project-name }}"
+          else
+            echo "has-e2e=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No E2E target found for e2e-${{ github.event.inputs.project-name }}, skipping..."
+          fi
+
       - name: Run E2E Tests for ${{ github.event.inputs.project-name }}
+        if: steps.check-e2e.outputs.has-e2e == 'true'
         run: npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1

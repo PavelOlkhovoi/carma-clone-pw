@@ -5,6 +5,31 @@ test.describe("geoportal fuzzy search test", () => {
   test.beforeEach(async ({ context, page }) => {
 
     await setupAllMocks(context);
+    
+    // Mock the additionalLayerConfig.json endpoint
+    await context.route("**/data/additionalLayerConfig.json*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "[]",
+      })
+    );
+
+    await context.route("https://wupp-3d-data.cismet.de/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "[]",
+      })
+    );
+
+    await context.route("https://cesium-wupp-terrain.cismet.de/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "[]",
+      })
+    );
 
     await page.goto("/");
     await page.waitForLoadState("networkidle");

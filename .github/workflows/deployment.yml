@@ -1,101 +1,68 @@
-name: Deployment
+name: Deploy to GitHub Pages
 
-run-name: >
-  ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
-  ${{ github.event_name == 'workflow_dispatch' && '👨🏽‍💼 ' || github.event_name == 'repository_dispatch' && '🤖 ' || github.event_name == 'push' && '👨‍💻 ' }}
-  ${{ github.event_name == 'repository_dispatch' && '(' || ''}}${{ github.event.client_payload.actor }}${{ github.event_name == 'repository_dispatch' && ')' || ''}} 
-  :
-  ${{ github.event.head_commit.message }}
-  ${{ github.event.inputs['project-name'] || github.event.client_payload['project-name'] }} 
-  ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
-  ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
-    -
-  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-deployment
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
 on:
-  workflow_dispatch:
-    inputs:
-      project-name:
-        description: "Please enter a project name"
-        required: true
-      version-manipulator:
-        description: "Release type (one of): patch, minor, major, prepatch, preminor, premajor, prerelease (Will change the version number of the project.)"
-        required: false
-      target:
-        type: choice
-        description: "Where should I deploy?"
-        options:
-          - live
-          - dev
-      create-docker-image:
-        type: boolean
-        description: Create a Docker image? 🐳
-
   push:
     branches:
-      - dev
-  repository_dispatch:
-    types: [trigger-workflow]
+      - main
 
 jobs:
   determine_projects:
-    if: "(github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && !contains(github.event.head_commit.message, 'skip-deploy') && !contains(github.event.head_commit.message, 'no-deploy')"
     runs-on: ubuntu-latest
     outputs:
       project_list: ${{ steps.set_up_matrix.outputs.project_list }}
       is_affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}
 
-    permissions:
-      contents: read
-      actions: read
-      pages: write
-      id-token: write
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: "recursive"
-      - name: Update Submodules
-        run: git submodule update --remote --recursive
-      - name: Print Collaboration Version numbers
-        run: |
-          echo "-------------------------------"
-          echo "All Collaboration Submodules:"
-          echo
-          find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
-          -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
+          submodules: recursive
 
-      - uses: actions/setup-node@v4
+      - name: Update submodules
+        run: git submodule update --remote --recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "npm"
-      - name: add cismet-dev registry secret to .npmrc
-        shell: bash
-        run: |
-          touch .npmrc
-          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+          node-version: '20'
+
       - name: Install dependencies
         run: npm install
+
+      - name: Skip Playwright browser downloads
+        run: echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1" >> $GITHUB_ENV
+
+      - name: Install Nx globally
+        run: npm install -g nx
 
       - name: Set Directory as Safe
         run: |
           git config --local --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Extract branch name
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch
+        shell: bash
+        run: |
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
 
-      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+      - name: Derive appropriate SHAs for base and head for `nx affected`
         id: setSHAs
         uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: ${{ steps.extract_branch.outputs.branch }}
 
-      - run: |
+      - name: Print SHAs
+        run: |
           echo "BASE: ${{ steps.setSHAs.outputs.base }}"
           echo "HEAD: ${{ steps.setSHAs.outputs.head }}"
+          
 
       - name: Load deployment configuration
         id: load_config
@@ -106,6 +73,7 @@ jobs:
           echo "project_keys=$project_keys" >> $GITHUB_ENV
           echo "Projects in deployment configuration: $project_keys"  # Debug output
           echo "::set-output name=deployment_projects::$project_keys"
+
       - name: Run nx command to show affected projects
         id: list_affected_projects
         run: |
@@ -113,12 +81,8 @@ jobs:
           projects=$(echo $projects | tr '\n' ' ')
           echo "Affected projects: $projects"
           echo "::set-output name=project_list::$projects"
-      # - name: Full Project list for debug reasons
-      #   id: list_affected_projects
-      #   run: |
-      #     projects=$(echo -e "fuzzy-search-playground\nverkehrszeichenkataster\ne-auto-ladestation\ne2e-verkehrszeichenkataster\ncorona-praeventation\nluftmessstationen\ne2e-luftmessstationen\nparkscheinautomaten\nehrenamtskarte\ngeneric-topicmaps\npotenzialflaechen-online\ne2e-potenzialflaechen\nbaederkarte\nkita-finder\ndocument-viewer\ne2e-kita-finder\ne2e-verdis-desktop\nhochwasser\nstarkregen\ne2e-hochwasser\ne2e-starkregen\nklimaorte\nstadtplan\ne2e-klimaorte\ne2e-lagis-desktop\ne2e-stadtplan\nfnp-test\numweltalarm\ntailwind-playground\ntechdemo\nverdis-desktop\ncismap-playground\nlagis-desktop\nvector\nbelis-online")
-      #     projects=$(echo $projects | tr '\n' ' ')
-      #     echo "::set-output name=project_list::$projects"
+          echo "project_list=$projects" >> $GITHUB_OUTPUT
+      
       - name: Set up matrix
         if: steps.list_affected_projects.outputs.project_list != ''
         id: set_up_matrix
@@ -173,7 +137,7 @@ jobs:
         run: |
           echo "The project list is |${{ steps.set_up_matrix.outputs.project_list }}|"
           echo "Is affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}"
-  build:
+  e2e:
     needs: determine_projects
     runs-on: ubuntu-latest
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}
@@ -187,8 +151,6 @@ jobs:
         project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
 
     steps:
-      # The steps for building and deploying the projects
-      # using the same matrix logic for each project...
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -196,394 +158,113 @@ jobs:
           submodules: "recursive"
       - name: Update Submodules
         run: git submodule update --remote --recursive
-      - name: Print Collaboration Version numbers
-        run: |
-          echo "-------------------------------"
-          echo "All Collaboration Submodules:"
-          echo
-          find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
-          -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-      - name: Read project config
-        id: read_project_config
-        run: echo "::set-output name=config::$(cat deployment-config.json)"
-        shell: bash
-
-      - name: Extract branch name build
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-        id: extract_branch
-
-      - name: Debug branch variable
-        run: echo "branch variable" ${{ steps.extract_branch.outputs.branch }}
-
-      - name: Process deploy steps
-        id: process_deploy_steps
-        run: |
-          config=$(cat deployment-config.json)
-
-
-          project_name="${{ matrix.project }}"
-          branch="${{ steps.extract_branch.outputs.branch }}"
-
-
-          # Directly check the structure
-          # echo "$config" | jq -r ".projects[\"$project_name\"]"
-          # echo "$config" | jq -r ".projects[\"$project_name\"].deployment"
-          # echo "$config" | jq -r ".projects[\"$project_name\"].deployment.auto"
-          # echo "$config" | jq -r ".projects[\"$project_name\"].deployment.auto[\"$branch\"]"
-
-          # Ensure jq variables are passed correctly
-          deploymentManual=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].repo // "null"')
-          baseUrl=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].base // "null"')
-          additionalEnvs=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.manual[$branch].pages.envs // [] | join(" ")')
-          orgDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.org // "null"')
-          prjDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.prj // "null"')
-          projectPath=$(echo "$config" | jq -r --arg project "$project_name" '.projects[$project].projectPath // "null"')
-          containerImage=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].container.image // "null"')
-
-
-          srcPath=".${projectPath#./dist}/src"
-          echo "srcPath: $srcPath"  # Debugging
-
-          srcMD5="$(echo -n $(find $srcPath -type f -exec md5sum {} \; | sort -k 2 | md5sum | cut -f 1 -d ' ')$(md5sum package.json package-lock.json | md5sum | cut -f 1 -d ' ') | md5sum | cut -f 1 -d ' ')"
-          srcMD5short="${srcMD5:0:4}"
-
-          # Debugging
-          # echo "deploymentManual: $deploymentManual"
-          # echo "baseUrl: $baseUrl"
-          # echo "orgDeploy: $orgDeploy"
-          # echo "prjDeploy: $prjDeploy"
-          # echo "projectPath: $projectPath"
-          # echo "containerImage: $containerImage"        
-          # echo "srcMD5: $srcMD5"
-          # echo "srcMD5short: $srcMD5short"
-
-          if [ "${baseUrl}" = "null" ]; then
-            if [ "${orgDeploy}" = "null" ]; then
-              baseUrl="/"
-            else
-              baseUrl="https://${orgDeploy}.github.io/${prjDeploy}/"
-            fi
-          else
-            baseUrl="${baseUrl}"
-          fi
-          if [ "${deploymentManual}" = "null" ]; then
-            deployment_project="${orgDeploy}/${prjDeploy}"
-          else
-            deployment_project="${deploymentManual}"
-          fi
-
-
-          echo "PROJECT_NAME=${{ matrix.project }}" >> $GITHUB_ENV
-          echo "EXTERNAL_REPO=${deployment_project}" >> $GITHUB_ENV
-          echo "BASE_URL=${baseUrl}" >> $GITHUB_ENV
-          echo "PROJECT_PATH=${projectPath}" >> $GITHUB_ENV
-          echo "ORG_DEPLOY=${orgDeploy}" >> $GITHUB_ENV
-          echo "PRJ_DEPLOY=${prjDeploy}" >> $GITHUB_ENV
-          echo "SRC_MD5=${srcMD5}" >> $GITHUB_ENV
-          echo "SRC_MD5_SHORT=${srcMD5short}" >> $GITHUB_ENV
-          echo "SRC_PATH=${srcPath}" >> $GITHUB_ENV
-          echo "CONTAINER_IMAGE=${containerImage}" >> $GITHUB_ENV
-          echo "TARGET=auto.${branch}" >> $GITHUB_ENV
-          echo "ADDITIONAL_ENVS=${additionalEnvs}" >> $GITHUB_ENV
-
-        shell: bash
-      - name: Create version.json if it doesn't exist
-        run: |
-          if [[ ! -f "$SRC_PATH/version.json" ]]; then
-            echo '{"version": "0.0.0"}' > "$SRC_PATH/version.json"
-          fi
-        shell: bash
-      - name: Add further info to version.json
-        run: |
-          jq --arg md5 "$SRC_MD5" --arg triggered "$TARGET" \
-          '. + {md5: $md5, triggered: $triggered}' \
-          "$SRC_PATH/version.json" > /tmp/version.json
-
-          mv /tmp/version.json "$SRC_PATH/version.json"
-        shell: bash
-      - name: Read version from version.json
-        run: |
-          version=$(jq -r '.version // "0.0.0"' "$SRC_PATH/version.json")
-          echo "VERSION=$version" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Debug Outputs
-        run: |
-          echo -----------------------------------
-          echo "-- Project name is: $PROJECT_NAME"
-          echo "ORG_DEPLOY: $ORG_DEPLOY"
-          echo "PROJECT_PATH: $PRJ_DEPLOY"
-          echo "BASE_URL: $BASE_URL"
-          echo "EXTERNAL_REPO: $EXTERNAL_REPO"
-          echo "SRC_PATH: $SRC_PATH"
-          echo "SRC_MD5: $SRC_MD5"
-          echo "CONTAINER_IMAGE: $CONTAINER_IMAGE"
-          echo "TARGET: $TARGET"
-          echo "VERSION: $VERSION"
-          echo "ADDITIONAL_ENVS: $ADDITIONAL_ENVS"
-          echo -----------------------------------
-      - name: Debug version.json
-        run: |
-          cat $SRC_PATH/version.json
-      - name: Set version (deprectated)
-        run: |
-          if [[ -f "$SRC_PATH/version.js" ]]; then
-            sed -i "s/%APPLICATION_VERSION%/$SRC_MD5_SHORT/" $SRC_PATH/version.js
-          else
-            if [[ -f "$SRC_PATH/app/version.js" ]]; then
-              sed -i "s/%APPLICATION_VERSION%/$SRC_MD5_SHORT/" $SRC_PATH/app/version.js
-            else
-              echo "No version.js file found. Version information will not be updated."
-            fi
-          fi
-      - name: Set hash (deprecated)
-        run: |
-          if [[ -f "$SRC_PATH/version.js" ]]; then
-            sed -i "s/%APPLICATION_HASH%/$SRC_MD5/" $SRC_PATH/version.js
-          else
-            if [[ -f "$SRC_PATH/app/version.js" ]]; then
-              sed -i "s/%APPLICATION_HASH%/$SRC_MD5/" $SRC_PATH/app/version.js
-            else
-              echo "No version.js file found. Hash information will not be updated."
-            fi
-          fi
-      - name: create nx-cloud.env
-        run: |
-          echo "NX_CLOUD_ACCESS_TOKEN=${{ secrets.NX_CLOUD_ACCESS_TOKEN }}" >> nx-cloud.env
-
-      - name: add cismet-dev registry secret to .npmrc
-        shell: bash
-        run: |
-          touch .npmrc
-          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build project
-        run: |
-          ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:build --configuration=production --base="${{ env.BASE_URL }}" --output-style=stream-without-prefixes
-        shell: bash
+      - name: Skip Playwright browser downloads
+        run: echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1" >> $GITHUB_ENV
 
-  single_build:
-    runs-on: ubuntu-latest
-    if: ${{ (github.event.inputs['project-name'] || github.event.client_payload['project-name']) != '' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) != '*' }}
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: "recursive" # Fetch all submodules recursively
-      - name: Update Submodules
-        run: git submodule update --remote --recursive
-      - name: Print Collaboration Version numbers
+      - name: List all projects with an E2E target
+        id: list_all_e2e_projects
+        shell: bash
         run: |
-          echo "-------------------------------"
-          echo "All Collaboration Submodules:"
+          echo "🔍 Listing all projects that declare an e2e target…"
+          raw=$(npx nx show projects --with-target=e2e)
+          echo "Raw E2E-capable projects (one per line):"
+          echo "$raw"
+          
+          # Normalize newlines to spaces
+          normalized=$(echo "$raw" | tr '\n' ' ')
           echo
-          find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
-          -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
-      - name: add cismet-dev registry secret to .npmrc
+          echo "Normalized E2E list: →$normalized←"
+
+          # Export for later steps
+          echo "e2e_all_projects=$normalized" >> $GITHUB_OUTPUT
+
+      - name: Debug show captured E2E-capable list
         shell: bash
         run: |
-          touch .npmrc
-          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-      - name: Get properties from json
-        id: get_props_from_json
+          echo "All E2E projects: ${{ steps.list_all_e2e_projects.outputs.e2e_all_projects }}"
+
+      - name: Run smoke Playwright E2E test for ${{ matrix.project }}
+        shell: bash
         run: |
-          config=$(cat deployment-config.json) 
-          project_name="${{ github.event.inputs['project-name'] || github.event.client_payload['project-name'] }}"
-          target="${{ github.event.inputs.target || github.event.client_payload.target }}"
+          e2e_proj="e2e-${{ matrix.project }}"
+          echo "🧪 Running smoke Playwright E2E for project: $e2e_proj"
 
-          # Fetch properties dynamically based on the target (dev or live)
-          deploymentManual=$(echo "$config" | jq -r --arg project "$project_name" --arg target "$target" '.projects[$project].deployment.manual[$target].repo // "null"')
-          baseUrl=$(echo "$config" | jq -r --arg project "$project_name" --arg target "$target" '.projects[$project].deployment.manual[$target].base // "null"')
-          additionalEnvs=$(echo "$config" | jq -r --arg project "$project_name" --arg target "$target" '.projects[$project].deployment.manual[$target].pages.envs // [] | join(" ")')
-          orgDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg target "$target" '.projects[$project].deployment.manual[$target].pages.org // "null"')
-          prjDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg target "$target" '.projects[$project].deployment.manual[$target].pages.prj // "null"')
-          projectPath=$(echo "$config" | jq -r --arg project "$project_name" '.projects[$project].projectPath')
-          srcPath=".${projectPath#./dist}/src"
+          # Skip if there is no corresponding e2e project
+          if ! npx nx show project "$e2e_proj" >/dev/null 2>&1; then
+            echo "ℹ️ No Playwright E2E project found for '${{ matrix.project }}' (expected Nx project: $e2e_proj). Skipping."
+            exit 0
+          fi
 
-          # Generate MD5 hash for versioning
-          srcMD5="$(echo -n $(find $srcPath -type f -exec md5sum {} \; | sort -k 2 | md5sum | cut -f 1 -d ' ')$(md5sum package.json package-lock.json | md5sum | cut -f 1 -d ' '))"
-          srcMD5short="${srcMD5:0:4}"
+          if ! npx nx run "$e2e_proj":e2e --grep=smoke --skipInstall; then
+            # Copy any generated Playwright reports into a temp folder
+            mkdir -p artifacts/reports/$e2e_proj
 
-          # Fetch container image from the deployment configuration
-          containerImage=$(echo "$config" | jq -r --arg project "$project_name" --arg target "$target" '.projects[$project].deployment.manual[$target].container.image // "null"')
+            # Determine the Nx project root to locate reports reliably
+            root_dir=$(npx nx show project "$e2e_proj" --json | jq -r '.root')
+            echo "Resolved $e2e_proj root: $root_dir"
 
-          # Determine the base URL
-          if [ "${baseUrl}" = "null" ]; then
-            if [ "${orgDeploy}" = "null" ]; then
-              baseUrl="/"
-            else
-              baseUrl="https://${orgDeploy}.github.io/${prjDeploy}/"
+            # Copy from the default Playwright report folder if present
+            if [ -d "$root_dir/report-pw" ]; then
+              echo "Copying from $root_dir/report-pw"
+              cp -r "$root_dir/report-pw"/* artifacts/reports/$e2e_proj/ || true
             fi
-          else
-            baseUrl="${baseUrl}"
-          fi
 
-          # Determine the deployment project
-          if [ "${deploymentManual}" = "null" ]; then
-            deployment_project="${orgDeploy}/${prjDeploy}"
-          else
-            deployment_project="${deploymentManual}"
-          fi
-
-          # Set environment variables
-          echo "PROJECT_NAME=${project_name}" >> $GITHUB_ENV
-          echo "EXTERNAL_REPO=${deployment_project}" >> $GITHUB_ENV
-          echo "PROJECT_PATH=${projectPath}" >> $GITHUB_ENV
-          echo "BASE_URL=${baseUrl}" >> $GITHUB_ENV
-          echo "ORG_DEPLOY=${orgDeploy}" >> $GITHUB_ENV
-          echo "PRJ_DEPLOY=${prjDeploy}" >> $GITHUB_ENV
-          echo "SRC_MD5=${srcMD5}" >> $GITHUB_ENV
-          echo "SRC_MD5_SHORT=${srcMD5short}" >> $GITHUB_ENV
-          echo "SRC_PATH=${srcPath}" >> $GITHUB_ENV
-          echo "CONTAINER_IMAGE=${containerImage}" >> $GITHUB_ENV
-          echo "TARGET=${target}" >> $GITHUB_ENV
-          echo "ADDITIONAL_ENVS=${additionalEnvs}" >> $GITHUB_ENV
-
-        shell: bash
-      - name: Create the version number
-        id: update_version_number
-        if: ${{ (github.event.inputs.target || github.event.client_payload.target) != 'dev' }} # Skip version manipulation for dev deployments
-        run: |
-          if [[ -f "$SRC_PATH/version.json" ]]; then
-            if [[ -n "${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) }}" ]]; then
-              cp "$SRC_PATH/version.json" /tmp/package.json
-              cd /tmp
-              npm version ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }} --no-git-tag-version --allow-same-version
-              cd -
-              cp /tmp/package.json "$SRC_PATH/version.json"
-              echo "version_changed=true" >> $GITHUB_ENV
-            else
-              echo "No version-manipulator input provided. Version information will not be updated."
-              echo "version_changed=false" >> $GITHUB_ENV
+            # Copy from playwright-report (default Playwright report folder)
+            if [ -d "$root_dir/playwright-report" ]; then
+              echo "Copying from $root_dir/playwright-report"
+              cp -r "$root_dir/playwright-report"/* artifacts/reports/$e2e_proj/ || true
             fi
-          else
-            echo "No version.json file found. Version information will not be updated."
-            echo "version_changed=false" >> $GITHUB_ENV
+            
+            # Emit an annotation so you see the failure immediately
+            echo "::error::Smoke Playwright E2E FAILED for project $e2e_proj"
+            exit 1
           fi
-        shell: bash
 
-      - name: Commit version.json changes
-        if: env.version_changed == 'true' && (github.event.inputs.target || github.event.client_payload.target) != 'dev' # Only commit if version was updated and target is not dev
-        run: |
-          git config --global user.email "902348742+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-
-          git add "$SRC_PATH/version.json"
-          git commit -m "Update version.json based on ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}"
-          git push origin dev
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run smoke Cypress E2E test for ${{ matrix.project }} (for comparison)
         shell: bash
-      - name: Create version.json if it doesn't exist
         run: |
-          if [[ ! -f "$SRC_PATH/version.json" ]]; then
-            echo '{"version": "0.0.0"}' > "$SRC_PATH/version.json"
+          cypress_proj="e2e-${{ matrix.project }}"
+          echo "🧪 Running smoke Cypress E2E for project: $cypress_proj (for speed comparison)"
+
+          # Skip if there is no corresponding cypress e2e project
+          if ! npx nx show project "$cypress_proj" >/dev/null 2>&1; then
+            echo "ℹ️ No Cypress E2E project found for '${{ matrix.project }}' (expected Nx project: $cypress_proj). Skipping comparison."
+            exit 0
           fi
-        shell: bash
-      - name: Add further info to version.json
-        run: |
-          jq --arg md5 "$SRC_MD5" --arg triggered "$TARGET" \
-          '. + {md5: $md5, triggered: $triggered}' \
-          "$SRC_PATH/version.json" > /tmp/version.json
+          
+          if ! npx nx run "$cypress_proj":e2e --spec="**/smoke.cy.ts" --skip-nx-cache; then
+            # Copy any generated Cypress screenshots into a temp folder
+            mkdir -p artifacts/cypress-screenshots/$cypress_proj
 
-          mv /tmp/version.json "$SRC_PATH/version.json"
-        shell: bash
-      - name: Read version from version.json
-        run: |
-          version=$(jq -r '.version // "0.0.0"' "$SRC_PATH/version.json")
-          echo "VERSION=$version" >> $GITHUB_ENV
-        shell: bash
+            # Determine the Nx project root to locate screenshots reliably
+            root_dir=$(npx nx show project "$cypress_proj" --json | jq -r '.root')
+            echo "Resolved $cypress_proj root: $root_dir"
 
-      - name: Debug Outputs
-        run: |
-          echo -----------------------------------
-          echo "-- Project name is: $PROJECT_NAME"
-          echo "ORG_DEPLOY: $ORG_DEPLOY"
-          echo "PROJECT_PATH: $PRJ_DEPLOY"
-          echo "BASE_URL: $BASE_URL"
-          echo "EXTERNAL_REPO: $EXTERNAL_REPO"
-          echo "SRC_PATH: $SRC_PATH"
-          echo "SRC_MD5: $SRC_MD5"
-          echo "CONTAINER_IMAGE: $CONTAINER_IMAGE"
-          echo "TARGET: $TARGET"
-          echo "VERSION: $VERSION"
-          echo "ADDITIONAL_ENVS: $ADDITIONAL_ENVS"
-          echo -----------------------------------
-      - name: Debug version.json
-        run: |
-          cat $SRC_PATH/version.json
-      - name: Set version (deprecated)
-        run: |
-          if [[ -f "$SRC_PATH/version.js" ]]; then
-            sed -i "s/%APPLICATION_VERSION%/$SRC_MD5_SHORT/" $SRC_PATH/version.js
-          else
-            if [[ -f "$SRC_PATH/app/version.js" ]]; then
-              sed -i "s/%APPLICATION_VERSION%/$SRC_MD5_SHORT/" $SRC_PATH/app/version.js
-            else
-              echo "No version.js file found. Version information will not be updated."
+            # Copy from the default Cypress screenshots folder if present
+            if [ -d "$root_dir/cypress/screenshots" ]; then
+              echo "Copying from $root_dir/cypress/screenshots"
+              cp -r "$root_dir/cypress/screenshots"/* artifacts/cypress-screenshots/$cypress_proj/ || true
             fi
-          fi
-      - name: Set hash (deprecated)
-        run: |
-          if [[ -f "$SRC_PATH/version.js" ]]; then
-            sed -i "s/%APPLICATION_HASH%/$SRC_MD5/" $SRC_PATH/version.js
-          else
-            if [[ -f "$SRC_PATH/app/version.js" ]]; then
-              sed -i "s/%APPLICATION_HASH%/$SRC_MD5/" $SRC_PATH/app/version.js
-            else
-              echo "No version.js file found. Hash information will not be updated."
+
+            # Copy from report-cy/screenshots (used by some projects)
+            if [ -d "$root_dir/report-cy/screenshots" ]; then
+              echo "Copying from $root_dir/report-cy/screenshots"
+              cp -r "$root_dir/report-cy/screenshots"/* artifacts/cypress-screenshots/$cypress_proj/ || true
             fi
+            
+            # Emit an annotation for Cypress failure (but don't fail the build)
+            echo "::warning::Smoke Cypress E2E FAILED for project $cypress_proj (comparison test)"
+          else
+            echo "✅ Cypress smoke test completed successfully"
           fi
-      - name: create nx-cloud.env
-        run: |
-          echo "NX_CLOUD_ACCESS_TOKEN=${{ secrets.NX_CLOUD_ACCESS_TOKEN }}" >> nx-cloud.env
 
-      - name: add cismet-dev registry secret to .npmrc
-        shell: bash
-        run: |
-          touch .npmrc
-          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build project
-        run: |
-          ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ github.event.inputs['project-name'] || github.event.client_payload['project-name'] }}:build --configuration=production --base="${{ env.BASE_URL }}"
-        shell: bash
-
-  all_projects_build:
-    if: ${{ (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '*' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    outputs:
-      project_list: ${{ steps.get_all_projects.outputs.project_list }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Upload E2E reports
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          fetch-depth: 0
-          submodules: "recursive"
-
-      - name: Get all projects from deployment configuration
-        id: get_all_projects
-        run: |
-          config=$(cat deployment-config.json)
-          project_keys=$(echo "$config" | jq -r '.projects | keys | @json')
-          echo "::set-output name=project_list::$project_keys"
+          name: e2e-reports-${{ matrix.project }}
+          path: artifacts/reports/e2epw-${{ matrix.project }}

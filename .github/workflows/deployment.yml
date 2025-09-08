@@ -281,6 +281,12 @@ jobs:
       - name: Install Nx globally
         run: npm install -g nx
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/playwright-browsers
+          key: playwright-browsers-${{ hashFiles('**/package-lock.json') }}
+
       - name: Check if E2E target exists
         id: check-e2e
         run: |

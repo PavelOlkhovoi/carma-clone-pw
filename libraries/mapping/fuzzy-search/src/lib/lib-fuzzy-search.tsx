@@ -42,6 +42,7 @@ const defaultIcon = (
     }}
   />
 );
+
 export function LibFuzzySearch({
   gazData,
   onSelection,

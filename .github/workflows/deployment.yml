@@ -193,23 +193,7 @@ jobs:
         run: |
           echo "All E2E projects: ${{ steps.list_all_e2e_projects.outputs.e2e_all_projects }}"
 
-      - name: Filter out authorization-dependent E2E projects
-        id: filter_e2e_projects
-        shell: bash
-        run: |
-          e2e_proj="e2e-${{ matrix.project }}"
-          echo "🔍 Filtering out authorization-dependent E2E projects for $e2e_proj"
-
-          # Skip authorization-dependent tests that are currently broken
-          if [[ "$e2e_proj" == "e2e-lagis-desktop" || "$e2e_proj" == "e2e-verdis-desktop" || "$e2e_proj" == "e2e-potenzialflaechen" || "$e2e_proj" == "e2e-verkehrszeichenkataster" ]]; then
-            echo "⏭️ Skipping $e2e_proj - authorization-dependent test temporarily disabled"
-            echo "should_skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_skip=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Run smoke Playwright E2E test for ${{ matrix.project }}
-        if: steps.filter_e2e_projects.outputs.should_skip != 'true'
         shell: bash
         run: |
           e2e_proj="e2e-${{ matrix.project }}"

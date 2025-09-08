@@ -2,12 +2,6 @@ import { test, expect } from "@playwright/test";
 import { setupAllMocks } from "@carma-commons/e2e";
 
 test.describe("verdis-desktop smoke test", () => {
-  let userData: any;
-
-  test.beforeAll(async () => {
-    // Load test data from fixtures
-    userData = require("../fixtures/devSecrets.json");
-  });
 
   test("main page show map, menu, cards, combo boxes after authorisation", async ({
     page,
@@ -47,11 +41,28 @@ test.describe("verdis-desktop smoke test", () => {
           })
         );
 
+        await context.route("https://verdis-api.cismet.de/users", route =>
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              "user": "cismet",
+              "domain": "VERDIS_GRUNDIS",
+              "jwt": "0000000",
+              "passHash": "0000000",
+              "userGroups": [
+                "VORN_schreiben_KA_cismet",
+                "VORN_schreiben_KA"
+              ]
+            }),
+          })
+        );
+
     await page.goto("/");
 
     // Perform authentication
-    await page.locator("#username").fill(userData.cheatingUser);
-    await page.fill('input[type="password"]', userData.cheatingPassword);
+    await page.locator("#username").fill("cismet");
+    await page.fill('input[type="password"]', "cismet");
     await page.click(".ant-btn");
 
     // Wait for authentication and page load

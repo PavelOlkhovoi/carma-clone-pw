@@ -2,12 +2,6 @@ import { test, expect } from "@playwright/test";
 import { runMapSmokeTest, setupSmokeTest, setupAllMocks } from "@carma-commons/e2e";
 
 test.describe("potenzialflaechen-online smoke test", () => {
-  let userData: any;
-
-  test.beforeAll(async () => {
-    userData = require("../fixtures/devSecrets.json");
-  });
-
   test("map loads with key controls", async ({ context, page }) => {
     await setupAllMocks(context, ["bezirke", "quartiere", "kitas", "pois"]);
     
@@ -74,6 +68,25 @@ test.describe("potenzialflaechen-online smoke test", () => {
         body: "[]",
       })
     );
+
+    await context.route("https://potenzialflaechen-online-api.cismet.de/users", route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          "user": "cismetTest",
+          "domain": "WUNDA_BLAU",
+          "jwt": "0000000",
+          "passHash": "0000000",
+          "userGroups": [
+            "_Potenzialflaechen_LESEN",
+            "_Potenzialflaechen_LESEN_EXT",
+            "_Potenzialflaechen_PUBLIC",
+            "_Umweltalarm"
+          ]
+        }),
+      })
+    );
     
     await page.goto("/");
     await page.addStyleTag({
@@ -87,10 +100,10 @@ test.describe("potenzialflaechen-online smoke test", () => {
     await expect(modal).toBeVisible();
     await page
       .getByRole("textbox", { name: "WuNDa Benutzername" })
-      .fill(userData.cheatingUser);
+      .fill("cismetTest");
     await page
       .getByRole("textbox", { name: "Passwort" })
-      .fill(userData.cheatingPassword);
+      .fill("cismetTest");
     await page.getByRole("button", { name: "Anmeldung" }).click();
 
     await expect(modal).toHaveCount(0);

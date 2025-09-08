@@ -300,4 +300,21 @@ jobs:
 
       - name: Run E2E Tests for ${{ github.event.inputs.project-name }}
         if: steps.check-e2e.outputs.has-e2e == 'true'
-        run: npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1
+        run: |
+          set -e  # Exit on any error
+          echo "🧪 Starting E2E tests for e2e-${{ github.event.inputs.project-name }}"
+          
+          # Run the tests and capture exit code
+          if npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1; then
+            echo "✅ E2E tests passed successfully"
+          else
+            echo "❌ E2E tests failed"
+            exit 1
+          fi
+        env:
+          # Performance optimizations for CI
+          PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright-browsers
+          # Reduce browser startup time
+          PLAYWRIGHT_CHROMIUM_USE_HEADLESS_NEW: 1
+          # Optimize for CI environment
+          CI: true

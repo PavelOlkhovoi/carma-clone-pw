@@ -2,12 +2,6 @@ import { test, expect } from "@playwright/test";
 import { setupAllMocks, mockOMTMapHosting } from "@carma-commons/e2e";
 
 test.describe("lagis smoke test", () => {
-  let userData: any;
-
-  test.beforeAll(async () => {
-    // Load test data from fixtures
-    userData = require("../fixtures/devSecrets.json");
-  });
 
   test("main page show map, menu, cards, combo boxes after authorisation", async ({
     page,
@@ -22,14 +16,31 @@ test.describe("lagis smoke test", () => {
         body: "[]",
       })
     );
+
+    await context.route("https://lagis-api.cismet.de/users", route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          "user": "cismet",
+          "domain": "LAGIS",
+          "jwt": "0000000",
+          "passHash": "0000000",
+          "userGroups": [
+            "Lagerbuch",
+            "NKF"
+          ]
+        }),
+      })
+    );
     // Navigate to the application
     await page.goto("/");
     // Check initial page load
     // await expect(page.locator('text=LagIS')).toBeVisible();
 
     // Perform authentication
-    await page.fill('input[type="email"]', userData.cheatingUser);
-    await page.fill('input[type="password"]', userData.cheatingPassword);
+    await page.fill('input[type="email"]', "cismet");
+    await page.fill('input[type="password"]', "cismet");
     await page.click(".ant-btn");
 
     // Wait for authentication and page load

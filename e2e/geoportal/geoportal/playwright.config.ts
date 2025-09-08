@@ -29,5 +29,7 @@ export default defineConfig({
     url: "http://localhost:4222",
     reuseExistingServer: false,
     timeout: 60_000,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });

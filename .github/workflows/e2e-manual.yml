@@ -21,24 +21,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
           registry-url: 'https://npm.pkg.github.com'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Configure npm for GitHub packages
         run: |
           echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
-  
       - name: Install Dependencies
-        run: npm install
+        run: npm ci --prefer-offline
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
         run: |
-          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1
+          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache

@@ -15,7 +15,7 @@ jobs:
       CI: true
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     container:
-      image: mcr.microsoft.com/playwright:jammy
+      image: mcr.microsoft.com/playwright:v1.50.0-jammy
       options: --ipc=host
     steps:
       - name: Checkout repository

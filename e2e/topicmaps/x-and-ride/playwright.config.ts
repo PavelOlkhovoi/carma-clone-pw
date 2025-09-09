@@ -7,16 +7,14 @@ export default defineConfig({
   testDir: "./src/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
-  reporter: process.env.CI ? "github" : "html",
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: "html",
   use: {
     baseURL: "http://localhost:4222",
-    trace: "retain-on-failure",
+    trace: "on-first-retry",
     screenshot: "only-on-failure",
     channel: process.env.CI ? "chrome" : undefined,
-    navigationTimeout: 15000,
-    actionTimeout: 10000,
   },
   projects: [
     {
@@ -27,10 +25,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // Use Nx preview (which depends on build per project.json) for stable, fast startup in CI
-    command: "npx nx preview x-and-ride --port=4222 --configuration=production",
+    command: "npx nx serve x-and-ride --port=4222",
     url: "http://localhost:4222",
-    reuseExistingServer: !process.env.CI,
-    timeout: 45_000,
+    reuseExistingServer: false,
+    timeout: 60_000,
   },
 });

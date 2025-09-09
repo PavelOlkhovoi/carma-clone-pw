@@ -9,15 +9,15 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
-  timeout: 30_000, // Reduce test timeout for simple tests
+  reporter: process.env.CI ? "github" : "html",
+  timeout: 20_000, 
   use: {
     baseURL: "http://localhost:4222",
-    trace: "on-first-retry",
-    screenshot: "only-on-failure",
+    trace: "off",
+    screenshot: "off",
     channel: process.env.CI ? "chrome" : undefined,
-    navigationTimeout: 15_000, // Reduce navigation timeout
-    actionTimeout: 10_000, // Add action timeout
+    navigationTimeout: 7_000, 
+    actionTimeout: 5_000, 
   },
   projects: [
     {
@@ -30,9 +30,9 @@ export default defineConfig({
   webServer: {
     command: "npx nx serve x-and-ride --port=4222",
     url: "http://localhost:4222",
-    reuseExistingServer: !process.env.CI, // Reuse server locally, fresh in CI
-    timeout: 30_000, // Reduce webServer timeout
-    stdout: 'pipe', // Capture server logs
-    stderr: 'pipe',
+    reuseExistingServer: true,
+    timeout: 20_000, 
+    stdout: process.env.CI ? 'ignore' : 'pipe', 
+    stderr: process.env.CI ? 'ignore' : 'pipe',
   },
 });

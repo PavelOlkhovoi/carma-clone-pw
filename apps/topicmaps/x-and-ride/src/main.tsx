@@ -13,7 +13,6 @@ const root = ReactDOM.createRoot(
 // if (typeof global === "undefined") {
 //   window.global = window;
 // }
-
 root.render(
   <StrictMode>
     <div>Test</div>

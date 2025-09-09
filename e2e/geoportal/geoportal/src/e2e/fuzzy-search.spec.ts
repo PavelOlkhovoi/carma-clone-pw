@@ -5,6 +5,17 @@ test.describe("geoportal fuzzy search test", () => {
   test.beforeEach(async ({ context, page }) => {
 
     await setupAllMocks(context);
+
+        // ---- Log browser console to CI output ----
+        page.on("console", (msg) => {
+          console.log(`[browser:${msg.type()}] ${msg.text()}`);
+        });
+    
+        // ---- Log ALL requests/responses to help spot wrong patterns ----
+        page.on("request", (r) => console.log("[req]", r.method(), r.url()));
+        page.on("response", async (r) =>
+          console.log("[res]", r.status(), r.url())
+        );
     
     // Mock the additionalLayerConfig.json endpoint
     await context.route("**/data/additionalLayerConfig.json*", (route) =>

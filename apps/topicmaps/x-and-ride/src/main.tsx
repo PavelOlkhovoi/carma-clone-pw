@@ -14,7 +14,6 @@ const root = ReactDOM.createRoot(
 //   window.global = window;
 // }
 
-
 root.render(
   <StrictMode>
     <div>Test</div>

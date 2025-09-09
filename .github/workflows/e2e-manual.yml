@@ -29,24 +29,17 @@ jobs:
           echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: node-modules-cache
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/playwright-browsers
-          key: playwright-browsers-${{ hashFiles('**/package-lock.json') }}
+          path: |
+            node_modules
+          key: modules-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
-        run: |
-          echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1" >> $GITHUB_ENV
-          npm ci --prefer-offline --no-audit
+        run: npm ci --silent
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
 
       - name: Run E2E tests
         run: |

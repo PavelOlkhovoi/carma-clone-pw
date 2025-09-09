@@ -20,7 +20,7 @@ test.describe("x-and-ride smoke test", () => {
     //   checkInfoBox: true,
     // });
 
-    await page.goto("/");
+    await page.goto("/", { waitUntil: 'domcontentloaded' });
     // await page.waitForLoadState("networkidle");
     await expect(page.getByText('Test')).toBeVisible();
   });

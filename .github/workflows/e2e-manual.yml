@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: '1'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,7 +39,7 @@ jobs:
 
       - name: Start dev server (background)
         run: |
-          npx nx serve x-and-ride --port=4222 > /dev/null 2>&1 &
+          NX_DAEMON=false npx nx serve x-and-ride --port=4222 > /dev/null 2>&1 &
           echo $! > server.pid
 
       - name: Wait for server
@@ -52,9 +53,21 @@ jobs:
             sleep 0.2
           done
 
+      - name: Prewarm Vite transforms
+        run: |
+          # Touch common endpoints to trigger pre-bundling and module transforms
+          curl -sSf http://localhost:4222/@vite/client > /dev/null
+          curl -sSf http://localhost:4222/src/main.tsx > /dev/null
+
       - name: Run E2E tests
         run: |
-          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+          # Run Playwright directly to avoid Nx wrapper overhead
+          npx playwright test \
+            e2e/topicmaps/${{ github.event.inputs.project-name }}/src/e2e/smoke.spec.ts \
+            -c e2e/topicmaps/${{ github.event.inputs.project-name }}/playwright.config.ts \
+            --reporter=line \
+            --project=chromium \
+            --workers=1
 
       - name: Stop server
         if: always()

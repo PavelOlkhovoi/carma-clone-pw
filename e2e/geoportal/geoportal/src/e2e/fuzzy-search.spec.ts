@@ -7,9 +7,9 @@ test.describe("geoportal fuzzy search test", () => {
     await setupAllMocks(context);
 
         // ---- Log browser console to CI output ----
-        page.on("console", (msg) => {
-          console.log(`[browser:${msg.type()}] ${msg.text()}`);
-        });
+        // page.on("console", (msg) => {
+        //   console.log(`[browser:${msg.type()}] ${msg.text()}`);
+        // });
     
         // ---- Log ALL requests/responses to help spot wrong patterns ----
         page.on("request", (r) => console.log("[req]", r.method(), r.url()));
@@ -35,6 +35,14 @@ test.describe("geoportal fuzzy search test", () => {
     );
 
     await context.route("https://cesium-wupp-terrain.cismet.de/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "[]",
+      })
+    );
+
+    await context.route("https://wupptomo.cismet.de/**", (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",

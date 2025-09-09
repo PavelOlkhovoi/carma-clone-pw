@@ -48,7 +48,9 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm cache clean --force
+          npm install --force
 
       - name: Skip Playwright browser downloads
         run: echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1" >> $GITHUB_ENV
@@ -174,7 +176,9 @@ jobs:
         run: git submodule update --remote --recursive
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm cache clean --force
+          npm install --force
 
       - name: Skip Playwright browser downloads
         run: echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1" >> $GITHUB_ENV
@@ -276,7 +280,9 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm cache clean --force
+          npm install --force
 
       - name: Install Nx globally
         run: npm install -g nx

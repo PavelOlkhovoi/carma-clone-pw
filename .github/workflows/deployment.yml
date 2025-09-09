@@ -308,4 +308,19 @@ jobs:
         if: steps.check-e2e.outputs.has-e2e == 'true'
         run: |
           echo "🧪 Starting E2E tests for e2e-${{ github.event.inputs.project-name }}"
-          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1
+          set -e
+          set -o pipefail
+          
+          # Run tests and capture output
+          if npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1 2>&1 | tee test_output.log; then
+            # Check if there were any flaky tests in the output
+            if grep -q "flaky" test_output.log; then
+              echo "❌ E2E tests had flaky failures - treating as failed"
+              exit 1
+            else
+              echo "✅ E2E tests passed"
+            fi
+          else
+            echo "❌ E2E tests failed"
+            exit 1
+          fi

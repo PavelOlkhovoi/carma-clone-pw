@@ -11,43 +11,18 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.47.2-jammy
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1, submodules: 'recursive' }
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-          submodules: recursive
+          node-version: 20
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci --no-audit --prefer-offline
+      - run: |
+          npx nx e2e e2e-${{ github.event.inputs.project-name }} \
+            --skipInstall --parallel=1 -- \
+            --project=chromium --workers=1 --reporter=line
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://npm.pkg.github.com'
-
-      - name: Configure npm for GitHub packages
-        run: |
-          echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/playwright-browsers
-          key: playwright-browsers-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dependencies
-        run: |
-          echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1" >> $GITHUB_ENV
-          npm ci --prefer-offline --no-audit
-
-      - name: Run E2E tests
-        run: |
-          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall --parallel=1

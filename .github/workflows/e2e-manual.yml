@@ -11,6 +11,12 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    env:
+      CI: true
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    container:
+      image: mcr.microsoft.com/playwright:jammy
+      options: --ipc=host
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,13 +24,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Configure npm cache
+        uses: actions/cache@v4
         with:
-          node-version: '18'
-          registry-url: 'https://npm.pkg.github.com'
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
       - name: Configure npm for GitHub packages
         run: |

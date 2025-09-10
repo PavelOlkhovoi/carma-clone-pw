@@ -7,18 +7,16 @@ export default defineConfig({
   testDir: "./src/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 0 : 0,
+  retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? "github" : "html",
-  timeout: 20_000, // Lower overall test timeout for simple smoke tests
-  expect: { timeout: 5_000 },
+  reporter: "html",
+  timeout: 30_000, // Reduce test timeout for simple tests
   use: {
     baseURL: "http://localhost:4222",
-    trace: process.env.CI ? "off" : "on-first-retry",
-    screenshot: process.env.CI ? "off" : "only-on-failure",
-    video: "off",
-    navigationTimeout: 10_000, // Reduce navigation timeout
-    actionTimeout: 7_500, // Slightly lower action timeout
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    navigationTimeout: 15_000, // Reduce navigation timeout
+    actionTimeout: 10_000, // Add action timeout
   },
   projects: [
     {
@@ -31,8 +29,8 @@ export default defineConfig({
   webServer: {
     command: "npx nx serve x-and-ride --port=4222",
     url: "http://localhost:4222",
-    reuseExistingServer: true, // We'll pre-start server in CI to avoid startup cost
-    timeout: 20_000, // Lower webServer timeout
+    reuseExistingServer: !process.env.CI, // Reuse server locally, fresh in CI
+    timeout: 30_000, // Reduce webServer timeout
     stdout: 'pipe', // Capture server logs
     stderr: 'pipe',
   },

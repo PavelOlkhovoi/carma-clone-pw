@@ -63,4 +63,4 @@ jobs:
       - name: Run tests in subfolder
         run: |
           cd e2e/${{ github.event.inputs['project-name'] }}/${{ github.event.inputs['subfolder-name'] }}
-          npx playwright test --grep="${{ github.event.inputs['test-name'] }}" --repeat-each=${{ github.event.inputs['repeat-each'] }} --workers=1
+          npx playwright test --grep="${{ github.event.inputs['test-name'] }}" --repeat-each=${{ github.event.inputs['repeat-each'] }} --headed --workers=1

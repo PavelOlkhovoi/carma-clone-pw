@@ -19,11 +19,6 @@ on:
         description: 'Number of times to repeat each test'
         type: string
         required: true
-      workers:
-        description: 'Playwright workers to use (increase to speed up)'
-        type: string
-        required: false
-        default: '1'
     
 
 jobs:
@@ -39,7 +34,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           submodules: recursive
       
       # - name: Update submodules
@@ -68,11 +63,4 @@ jobs:
       - name: Run tests in subfolder
         run: |
           cd e2e/${{ github.event.inputs['project-name'] }}/${{ github.event.inputs['subfolder-name'] }}
-          npx playwright test \
-            --grep="${{ github.event.inputs['test-name'] }}" \
-            --repeat-each=${{ github.event.inputs['repeat-each'] }} \
-            --workers=${{ github.event.inputs['workers'] }} \
-            --reporter=github \
-            --trace=off \
-            --screenshot=off \
-            --video=off
+          npx playwright test --grep="${{ github.event.inputs['test-name'] }}" --repeat-each=${{ github.event.inputs['repeat-each'] }} --workers=1

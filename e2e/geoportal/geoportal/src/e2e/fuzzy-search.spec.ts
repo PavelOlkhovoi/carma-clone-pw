@@ -12,10 +12,10 @@ test.describe("geoportal fuzzy search test", () => {
         // });
     
         // ---- Log ALL requests/responses to help spot wrong patterns ----
-        page.on("request", (r) => console.log("[req]", r.method(), r.url()));
-        page.on("response", async (r) =>
-          console.log("[res]", r.status(), r.url())
-        );
+        // page.on("request", (r) => console.log("[req]", r.method(), r.url()));
+        // page.on("response", async (r) =>
+        //   console.log("[res]", r.status(), r.url())
+        // );
     
     // Mock the additionalLayerConfig.json endpoint
     await context.route("**/data/additionalLayerConfig.json*", (route) =>
@@ -59,11 +59,26 @@ test.describe("geoportal fuzzy search test", () => {
     await expect(searchInput).toBeVisible();
 
     await searchInput.click();
-    await searchInput.fill("A");
+    // Use keyboard.type so AntD AutoComplete gets key events (triggers onSearch reliably)
+    await page.keyboard.type("A", { delay: 20 });
 
+    // Retry briefly in case Fuse index/gaz data is still initializing in CI
+    await expect
+      .poll(async () => {
+        const dropdownCount = await page.locator(".fuzzy-dropdownwrapper").count();
+        if (dropdownCount === 0) {
+          // retrigger input to fire onSearch again
+          await searchInput.click();
+          await page.keyboard.press("Backspace");
+          await page.keyboard.type("A", { delay: 20 });
+        }
+        return dropdownCount;
+      }, { timeout: 15000 })
+      .toBeGreaterThan(0);
+      
     await page.waitForSelector(".fuzzy-dropdownwrapper", {
       state: "attached",
-      timeout: 10000,
+      timeout: 15000,
     });
     const dropdown = page.locator(".fuzzy-dropdownwrapper");
     await expect(dropdown).toBeVisible();

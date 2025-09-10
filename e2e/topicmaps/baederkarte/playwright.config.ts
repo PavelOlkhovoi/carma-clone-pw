@@ -20,7 +20,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: {
-        channel: process.env.CI ? "chrome" : undefined,
+        // Use bundled Chromium in Playwright Docker image; no system Chrome channel in CI
       },
     },
   ],

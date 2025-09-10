@@ -14,13 +14,14 @@ export default defineConfig({
     baseURL: "http://localhost:4111",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    channel: process.env.CI ? "chrome" : undefined,
+    navigationTimeout: 15_000, // Reduce navigation timeout
+    actionTimeout: 10_000, // Add action timeout
   },
   projects: [
     {
       name: "chromium",
       use: {
-        channel: process.env.CI ? "chrome" : undefined,
+ // Use bundled Chromium in Playwright Docker image; no system Chrome channel in CI
       },
     },
   ],

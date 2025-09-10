@@ -16,13 +16,13 @@ export default defineConfig({
     viewport: null,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    channel: process.env.CI ? "chrome" : undefined,
+        navigationTimeout: 15_000, actionTimeout: 10_000,
   },
   projects: [
     {
       name: "chromium",
       use: {
-        channel: process.env.CI ? "chrome" : undefined,
+            navigationTimeout: 15_000, actionTimeout: 10_000,
       },
     },
   ],

@@ -1,0 +1,43 @@
+name: Manual E2E Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., x-and-ride)'
+        required: true
+        type: string
+      subfolder-name:
+        description: 'Subfolder name (e.g., smoke)'
+        type: string
+        required: true
+      test-name:
+        description: 'Test name (e.g., smoke)'
+        type: string
+        required: true
+      repeat-each:
+        description: 'Number of times to repeat each test'
+        type: string
+        required: true
+    
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.0-jammy
+      options: --ipc=host
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      
+      - name: Run tests in subfolder
+        run: |
+          cd e2e-${{ github.event.inputs.project-name }}/${{ github.event.inputs.subfolder-name }}
+          npx playwright test --grep=${{ github.event.inputs.test-name }} --repeat-each=${{ github.event.inputs.repeat-each }} --workers=1

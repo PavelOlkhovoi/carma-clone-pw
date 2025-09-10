@@ -89,6 +89,9 @@ export function LibFuzzySearch({
     _onSelection = onSelectionForLeaflet;
   }
 
+
+  
+
   const inputStyle = {
     width: "calc(100% - 32px)",
     borderTopLeftRadius: 0,

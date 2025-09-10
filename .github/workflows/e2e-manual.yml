@@ -25,7 +25,11 @@ jobs:
           submodules: recursive
 
       - name: Update submodules
-        run: git submodule update --remote --recursive
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          git config --global --add safe.directory '*'
+          git submodule sync --recursive
+          git submodule update --init --remote --recursive
 
       - name: Configure npm cache
         uses: actions/cache@v4

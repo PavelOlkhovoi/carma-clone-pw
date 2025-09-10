@@ -26,6 +26,7 @@ console.error = (message, ...args) => {
   }
 };
 
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );

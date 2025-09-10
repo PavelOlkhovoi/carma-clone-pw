@@ -27,6 +27,7 @@ const getPOIColors = async (setPoiColors) => {
   );
 };
 
+
 const getConvertBPKlimaItemsToFeature = (poiColors) => {
   return (item, poiColors) => {
     return convertBPKlimaItemsToFeature(item, poiColors);

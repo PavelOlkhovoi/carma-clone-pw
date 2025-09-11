@@ -73,7 +73,7 @@ export function LibFuzzySearch({
   let _gazData, _onSelection;
   const onSelectionForLeaflet = useCreateGazetteerSelectorForLeaflet({});
 
-  
+
   const { gazData: hookedGazData } = useGazData();
 
   if (gazData) {
@@ -87,6 +87,8 @@ export function LibFuzzySearch({
   } else {
     _onSelection = onSelectionForLeaflet;
   }
+
+  
 
   const inputStyle = {
     width: "calc(100% - 32px)",

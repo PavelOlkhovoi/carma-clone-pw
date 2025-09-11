@@ -14,13 +14,13 @@ export default defineConfig({
     baseURL: "http://localhost:4222",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-        navigationTimeout: 15_000, actionTimeout: 10_000,
+    channel: process.env.CI ? "chrome" : undefined,
   },
   projects: [
     {
       name: "chromium",
       use: {
-            navigationTimeout: 15_000, actionTimeout: 10_000,
+        channel: process.env.CI ? "chrome" : undefined,
       },
     },
   ],

@@ -10,7 +10,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       CI: true
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'

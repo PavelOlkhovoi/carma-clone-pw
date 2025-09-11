@@ -73,6 +73,8 @@ export function LibFuzzySearch({
     getDefaultSearchConfig(config);
   let _gazData, _onSelection;
 
+
+  
   const onSelectionForLeaflet = useCreateGazetteerSelectorForLeaflet({});
 
   const { gazData: hookedGazData } = useGazData();

@@ -10,7 +10,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ubuntu-latest]
     env:
       CI: true
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
@@ -45,8 +45,23 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
       - name: Install Dependencies
-        run: npm ci --prefer-offline
+        run: npm ci --prefer-offline --no-audit --no-fund
 
-      - name: Run E2E tests
+      - name: Run E2E tests (pre-start server and reuse)
         run: |
+          set -e
+          # Start the dev server in background
+          npx nx serve x-and-ride --port=4222 > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Started server PID: $SERVER_PID, waiting for readiness..."
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:4222 > /dev/null; then
+              echo "Server is up"; break
+            fi
+            sleep 1
+          done
+          # Run E2E
           npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+          # Show server logs on completion for debugging context
+          echo "--- server.log (tail) ---"
+          tail -n 200 server.log || true

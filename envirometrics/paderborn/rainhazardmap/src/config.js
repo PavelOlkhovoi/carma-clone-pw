@@ -1,4 +1,4 @@
-import { starkregenConstants } from "./constants";
+import { starkregenConstants } from "@cismet-dev/react-cismap-envirometrics-maps/constants";
 import citymapGrey from "./assets/images/rain-hazard-map-bg/citymapGrey.18b.png";
 import orthoBg from "./assets/images/rain-hazard-map-bg/ortho.18.png";
 import citymapBg from "./assets/images/rain-hazard-map-bg/citymap.18.png";

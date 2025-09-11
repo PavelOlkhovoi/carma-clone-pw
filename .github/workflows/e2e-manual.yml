@@ -10,7 +10,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # env:
       # CI: true
       # Remove SKIP_BROWSER_DOWNLOAD when installing browsers explicitly

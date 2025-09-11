@@ -1,0 +1,67 @@
+name: Manual E2E Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., x-and-ride)'
+        required: true
+        type: string
+
+jobs:
+  e2e:
+    runs-on: self-hosted
+    env:
+      CI: true
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.0-jammy
+      options: --ipc=host
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Update submodules
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          git config --global --add safe.directory '*'
+          git submodule sync --recursive
+          git submodule update --init --remote --recursive
+
+      - name: Configure npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Configure npm for GitHub packages
+        run: |
+          echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+
+      - name: Install Dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Run E2E tests (pre-start server and reuse)
+        run: |
+          set -e
+          # Start the dev server in background
+          npx nx serve x-and-ride --port=4222 > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Started server PID: $SERVER_PID, waiting for readiness..."
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:4222 > /dev/null; then
+              echo "Server is up"; break
+            fi
+            sleep 1
+          done
+          # Run E2E
+          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+          # Show server logs on completion for debugging context
+          echo "--- server.log (tail) ---"
+          tail -n 200 server.log || true

@@ -14,12 +14,9 @@ jobs:
     env:
       CI: true
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-    container:
-      image: mcr.microsoft.com/playwright:v1.50.0-jammy
-      options: --ipc=host
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
@@ -32,7 +29,7 @@ jobs:
           git submodule update --init --remote --recursive
 
       - name: Configure npm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
@@ -44,24 +41,18 @@ jobs:
           echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
 
-      - name: Install Dependencies
-        run: npm ci --prefer-offline --no-audit --no-fund
-
-      - name: Run E2E tests (pre-start server and reuse)
+      - name: Run E2E inside Playwright container
         run: |
           set -e
-          # Start the dev server in background
-          npx nx serve x-and-ride --port=4222 > server.log 2>&1 &
-          SERVER_PID=$!
-          echo "Started server PID: $SERVER_PID, waiting for readiness..."
-          for i in $(seq 1 60); do
-            if curl -fsS http://localhost:4222 > /dev/null; then
-              echo "Server is up"; break
-            fi
-            sleep 1
-          done
-          # Run E2E
-          npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
-          # Show server logs on completion for debugging context
-          echo "--- server.log (tail) ---"
-          tail -n 200 server.log || true
+          docker run --rm --ipc=host \
+            -e CI=1 \
+            -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -v "$PWD":"$PWD" -w "$PWD" \
+            mcr.microsoft.com/playwright:v1.50.0-jammy \
+            bash -lc '
+              echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc && \
+              echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc && \
+              npm ci --prefer-offline --no-audit --no-fund && \
+              npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+            '

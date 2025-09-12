@@ -187,10 +187,9 @@ test.describe("verkehrszeichenkataster smoke test", () => {
     );
 
     await page.goto("/");
-
     // Perform authentication
-    await page.locator("#username").fill(userData.cheatingUser);
-    await page.fill('input[type="password"]', userData.cheatingPassword);
+    await page.locator("#username").fill("cismet");
+    await page.fill('input[type="password"]', "cismet");
     await page.click(".ant-btn");
 
     // Wait for authentication and page load

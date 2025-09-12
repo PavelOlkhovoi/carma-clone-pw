@@ -1,0 +1,46 @@
+name: Manual E2E Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., x-and-ride)'
+        required: true
+        type: string
+
+jobs:
+  e2e:
+    runs-on: self-hosted
+    # env:
+      # CI: true
+      # Remove SKIP_BROWSER_DOWNLOAD when installing browsers explicitly
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Configure npm for GitHub packages
+        run: |
+          echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+
+      - name: Install Dependencies
+        run: npm i
+
+      - name: Run E2E tests
+        run: npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall

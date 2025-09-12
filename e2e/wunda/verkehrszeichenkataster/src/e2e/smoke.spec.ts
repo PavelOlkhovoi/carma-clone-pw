@@ -2,12 +2,6 @@ import { test, expect } from "@playwright/test";
 import { setupAllMocks, mockOMTMapHosting } from "@carma-commons/e2e";
 
 test.describe("verkehrszeichenkataster smoke test", () => {
-  let userData: any;
-
-  test.beforeAll(async () => {
-    // Load test data from fixtures
-    userData = require("../fixtures/devSecrets.json");
-  });
 
   test("main page show map, menu, cards, combo boxes after authorisation", async ({
     page,

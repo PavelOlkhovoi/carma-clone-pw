@@ -42,6 +42,8 @@ jobs:
       - name: Install Dependencies
         run: npm i
 
-      - name: Run E2E tests
+      # - name: Run E2E tests
+      #   run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
 
-        run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+      - name: Run all smoke tests
+        run: npx PW_CHANNEL=chrome npx nx run-many --target=e2e --projects="e2e-*" --grep=smoke --skip-nx-cache --parallel=1

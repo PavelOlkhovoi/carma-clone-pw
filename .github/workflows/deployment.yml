@@ -418,11 +418,26 @@ jobs:
           echo
           find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
           -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+
+      - name: Install dependencies (CI)
+        run: |
+          # Prefer npm ci in CI for reproducible installs (requires package-lock.json)
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+              npm install
+            fi
 
       - name: Get properties from json
         id: get_props_from_json

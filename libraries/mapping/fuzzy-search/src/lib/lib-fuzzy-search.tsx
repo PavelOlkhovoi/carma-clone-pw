@@ -90,8 +90,6 @@ export function LibFuzzySearch({
 
 
 
-
-  
   const inputStyle = {
     width: "calc(100% - 32px)",
     borderTopLeftRadius: 0,

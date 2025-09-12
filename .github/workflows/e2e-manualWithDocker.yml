@@ -35,6 +35,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          check-latest: false
 
       - name: Configure npm cache
         uses: actions/cache@v4

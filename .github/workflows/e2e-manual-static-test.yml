@@ -1,4 +1,4 @@
-name: Manual E2E Runner
+name: Manual E2E Static Test Runner
 
 on:
   workflow_dispatch:

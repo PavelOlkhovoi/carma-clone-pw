@@ -12,7 +12,7 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     env:
-      CI: true
+      CI: false
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     container:
       image: mcr.microsoft.com/playwright:v1.50.0-jammy

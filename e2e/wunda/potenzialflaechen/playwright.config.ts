@@ -20,9 +20,10 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
+      name: "chrome",
       use: {
             navigationTimeout: 15_000, actionTimeout: 10_000,
+        channel: process.env.PW_CHANNEL || undefined,
       },
     },
   ],

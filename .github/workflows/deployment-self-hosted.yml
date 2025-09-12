@@ -1,4 +1,4 @@
-name: Deployment with gh
+name: Deployment Self-hosted
 
 run-name: >
   ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
@@ -10,7 +10,7 @@ run-name: >
   ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
   ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
     -
-  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-GitHub-runner
+  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-Self-hosted-runner
 on:
   workflow_dispatch:
     inputs:
@@ -39,7 +39,7 @@ on:
 jobs:
   determine_projects:
     if: "(github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && !contains(github.event.head_commit.message, 'skip-deploy') && !contains(github.event.head_commit.message, 'no-deploy')"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted 
     outputs:
       project_list: ${{ steps.set_up_matrix.outputs.project_list }}
       is_affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}
@@ -175,7 +175,7 @@ jobs:
           echo "Is affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}"
   build:
     needs: determine_projects
-    runs-on: ubuntu-latest
+    runs-on: self-hosted 
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}
 
     permissions:
@@ -375,7 +375,7 @@ jobs:
   
   all_projects_build:
     if: ${{ (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '*' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted 
     permissions:
       contents: write
       pages: write
@@ -399,7 +399,7 @@ jobs:
 
   build_each_project:
     needs: all_projects_build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted 
     strategy:
       matrix:
         project: ${{ fromJson(needs.all_projects_build.outputs.project_list) }} # Use output from previous job

@@ -43,4 +43,4 @@ jobs:
         run: npm i
 
       - name: Run all smoke tests
-        run: npx PW_CHANNEL=chrome npx nx run-many --target=e2e --projects="e2e-*" --grep=smoke --skip-nx-cache --parallel=1
+        run: PW_CHANNEL=chrome npx nx run-many --target=e2e --projects="e2e-*" --grep=smoke --skip-nx-cache --parallel=1

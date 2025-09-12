@@ -10,10 +10,10 @@ on:
 
 jobs:
   e2e:
-    runs-on: self-hosted
-    env:
-      CI: true
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    runs-on: ubuntu-latest
+    # env:
+    #   CI: true
+    #   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     container:
       image: mcr.microsoft.com/playwright:v1.50.0-jammy
       options: --ipc=host
@@ -23,19 +23,12 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-
-      - name: Update submodules
-        run: |
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-          git config --global --add safe.directory '*'
-          git submodule sync --recursive
-          git submodule update --init --remote --recursive
-
+  
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+  
       - name: Configure npm cache
         uses: actions/cache@v4
         with:
@@ -43,14 +36,14 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
-
+  
       - name: Configure npm for GitHub packages
         run: |
           echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-
+  
       - name: Install Dependencies
-        run: npm ci --prefer-offline
-
+        run: npm i
+  
       - name: Run E2E tests
-        run: PW_CHANNEL=chromium npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+        run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall

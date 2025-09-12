@@ -601,3 +601,7 @@ jobs:
         run: |
           ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:build --configuration=production --base="${{ env.BASE_URL }}"
         shell: bash
+
+      - name: Run smoke tests
+        run: |
+          ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:smoke

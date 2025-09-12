@@ -11,9 +11,9 @@ on:
 jobs:
   e2e:
     runs-on: self-hosted
-    env:
-      CI: true
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    # env:
+    #   CI: true
+    #   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     container:
       image: mcr.microsoft.com/playwright:v1.50.0-jammy
       options: --ipc=host
@@ -24,12 +24,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Update submodules
-        run: |
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-          git config --global --add safe.directory '*'
-          git submodule sync --recursive
-          git submodule update --init --remote --recursive
+      # - name: Update submodules
+      #   run: |
+      #     git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+      #     git config --global --add safe.directory '*'
+      #     git submodule sync --recursive
+      #     git submodule update --init --remote --recursive
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

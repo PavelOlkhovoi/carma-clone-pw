@@ -20,7 +20,7 @@ export default defineConfig({
     {
       name: "chrome",
       use: {
-        channel: process.env.CI ? "chrome" : undefined,
+        channel:  process.env.PW_CHANNEL || undefined,
       },
     },
   ],

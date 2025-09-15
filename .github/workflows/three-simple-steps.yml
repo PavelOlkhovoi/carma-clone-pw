@@ -1,4 +1,4 @@
-name: Deployment with double matrix
+name: Simple Double Matrix Experiment
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
   determine_projects:
     runs-on: ubuntu-latest
     outputs:
-      project_list: '["project1", "project2", "project3"]'
+      project_list: ${{ steps.set_projects.outputs.project_list }}
 
     steps:
       - name: Checkout Repository
@@ -24,6 +24,11 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+
+      - name: Set project list
+        id: set_projects
+        run: |
+          echo 'project_list=["project1", "project2", "project3"]' >> $GITHUB_OUTPUT
 
   build:
     runs-on: ubuntu-latest
@@ -31,23 +36,34 @@ jobs:
     strategy:
       matrix:
         project: ${{ fromJSON(needs.determine_projects.outputs.project_list) }}
+    
+    outputs:
+      project-name: ${{ matrix.project }}
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: "recursive"
+          
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
+          
       - name: Show project name
-        run: echo "Project name:" ${{ matrix.project }}
+        run: echo "Building project:" ${{ matrix.project }}
 
   buildWithTests: 
-    needs: build
+    needs: [determine_projects, build]
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJSON(needs.determine_projects.outputs.project_list) }}
     
     steps:
-      - name: Run smoke tests
-        run: echo "smoke tests"
+      - name: Run smoke tests for project
+        run: |
+          echo "Running smoke tests for project: ${{ matrix.project }}"
+          echo "This test job corresponds to the build job for ${{ matrix.project }}"

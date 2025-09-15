@@ -3,7 +3,7 @@ name: Simple Double Matrix Experiment
 on:
   push:
     branches:
-      - dev
+      - main
   repository_dispatch:
     types: [trigger-workflow]
 

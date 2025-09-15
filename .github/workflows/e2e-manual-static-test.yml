@@ -43,4 +43,4 @@ jobs:
         run: npm i
 
       - name: Run E2E tests
-        run: npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall
+        run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs.project-name }} --skip-nx-cache --skipInstall

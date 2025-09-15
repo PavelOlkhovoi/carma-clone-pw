@@ -387,7 +387,7 @@ jobs:
           fi
 
             
-  buildWithTests: 
+  smokeTest: 
     needs: [determine_projects, build]
     runs-on: ubuntu-latest
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}

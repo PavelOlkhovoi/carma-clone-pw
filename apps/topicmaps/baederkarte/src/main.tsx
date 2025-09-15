@@ -20,4 +20,3 @@ root.render(
     </GazDataProvider>
   </StrictMode>
 );
-

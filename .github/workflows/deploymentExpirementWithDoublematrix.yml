@@ -32,7 +32,7 @@ on:
 
   push:
     branches:
-      - dev
+      - main
   repository_dispatch:
     types: [trigger-workflow]
 
@@ -372,12 +372,35 @@ jobs:
         shell: bash
 
   buildWithTests: 
-    needs: build
+    needs: [determine_projects, build]
     runs-on: ubuntu-latest
+    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
 
     steps:
-      - name: Run smoke tests
-        run: echo "smoke tests"
-           
-      
-  
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+          
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+          
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Run smoke tests for project
+        run: |
+          echo "Running smoke tests for project: ${{ matrix.project }}"
+          echo "This corresponds to the build job for ${{ matrix.project }}"

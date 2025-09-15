@@ -18,7 +18,7 @@ test.describe("geoportal smoke test", () => {
     ).toBeVisible();
     await expect(page.locator('[data-test-id="3d-control"]')).toBeVisible();
 
-    await expect(page.locator('[data-test-id="2d-control"]')).toHaveCount(100);
+    await expect(page.locator('[data-test-id="2d-control"]')).toHaveCount(0);
 
     await expect(
       page.locator('[data-test-id="compass-control"]')

@@ -374,15 +374,7 @@ jobs:
   buildWithTests: 
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}
-      
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
+
     steps:
       - name: Run smoke tests
         run: echo "smoke tests"

@@ -28,7 +28,6 @@ export function App() {
   }, []);
 
   
-  
   return (
     <TopicMapContextProvider
       appKey="EBikeKarteWuppertal2022"

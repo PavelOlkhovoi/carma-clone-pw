@@ -42,6 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       project_list: ${{ steps.set_up_matrix.outputs.project_list }}
+      e2e_list: ${{ steps.generate_e2e_list.outputs.e2e_list }}
       is_affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}
 
     permissions:
@@ -169,6 +170,52 @@ jobs:
           # echo "$result_json"
           echo "::set-output name=project_list::$result_json"
           echo "PROJECT_LIST=${result_json}" >> $GITHUB_ENV
+      - name: Generate E2E project list
+        if: steps.list_affected_projects.outputs.project_list != ''
+        id: generate_e2e_list
+        run: |
+          # Get the project list from the matrix setup
+          projects='${{ steps.set_up_matrix.outputs.project_list }}'
+          
+          # Initialize empty array for E2E projects
+          e2e_projects="[]"
+          
+          if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
+            # Parse the JSON array and check each project for E2E existence
+            e2e_list="["
+            first=true
+            
+            # Extract project names from JSON array
+            project_names=$(echo "$projects" | jq -r '.[]')
+            
+            for project in $project_names; do
+              e2e_proj="e2e-$project"
+              echo "Checking for E2E project: $e2e_proj"
+              
+              if npx nx show project "$e2e_proj" >/dev/null 2>&1; then
+                echo "✅ E2E project '$e2e_proj' found"
+                if [ "$first" = true ]; then
+                  e2e_list="$e2e_list\"$e2e_proj\""
+                  first=false
+                else
+                  e2e_list="$e2e_list, \"$e2e_proj\""
+                fi
+              else
+                echo "❌ E2E project '$e2e_proj' not found"
+              fi
+            done
+            
+            e2e_list="$e2e_list]"
+            e2e_projects="$e2e_list"
+          fi
+          
+          echo "::set-output name=e2e_list::$e2e_projects"
+          echo "E2E_LIST=$e2e_projects" >> $GITHUB_ENV
+      
+      - name: Debug E2E project list
+        run: |
+          echo "The E2E project list is: ${{ steps.generate_e2e_list.outputs.e2e_list }}"
+      
       - name: Show project list
         run: |
           echo "The project list is |${{ steps.set_up_matrix.outputs.project_list }}|"

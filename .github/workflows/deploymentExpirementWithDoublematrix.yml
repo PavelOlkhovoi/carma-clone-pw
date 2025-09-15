@@ -436,7 +436,7 @@ jobs:
             
   smokeTest: 
     needs: [determine_projects]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' }}
     strategy:
       matrix:
@@ -470,4 +470,4 @@ jobs:
 
 
       - name: Run E2E tests
-        run: PW_CHANNEL=chromium npx nx e2e e2e-${{ matrix.project }} --grep="smoke" --skipInstall
+        run: PW_CHANNEL=chromium npx nx e2e e2e-${{ matrix.project }}:e2e --grep="smoke" --skipInstall

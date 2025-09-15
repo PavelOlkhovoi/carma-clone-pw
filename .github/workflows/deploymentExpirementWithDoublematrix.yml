@@ -370,9 +370,6 @@ jobs:
         run: |
           ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:build --configuration=production --base="${{ env.BASE_URL }}" --output-style=stream-without-prefixes
         shell: bash
-        shell: bash
-        run: |
-          echo "All E2E projects: ${{ steps.list_all_e2e_projects.outputs.e2e_all_projects }}"
       
       - name: Check if E2E project exists and run tests
         shell: bash

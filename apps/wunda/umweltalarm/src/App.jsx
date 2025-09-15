@@ -42,6 +42,7 @@ export const db = initTables(appKey, daqKeys);
 
 
 
+
 function App() {
   let backgroundModes;
   useEffect(() => {

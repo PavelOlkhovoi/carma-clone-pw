@@ -1,0 +1,53 @@
+name: Deployment with double matrix
+
+on:
+  push:
+    branches:
+      - dev
+  repository_dispatch:
+    types: [trigger-workflow]
+
+jobs:
+  determine_projects:
+    runs-on: ubuntu-latest
+    outputs:
+      project_list: '["project1", "project2", "project3"]'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: determine_projects
+    strategy:
+      matrix:
+        project: ${{ fromJSON(needs.determine_projects.outputs.project_list) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - name: Show project name
+        run: echo "Project name:" ${{ matrix.project }}
+
+  buildWithTests: 
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Run smoke tests
+        run: echo "smoke tests"

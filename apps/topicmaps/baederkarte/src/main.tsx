@@ -11,8 +11,6 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 
-
-
 root.render(
   <StrictMode>
     <GazDataProvider config={gazDataConfig}>

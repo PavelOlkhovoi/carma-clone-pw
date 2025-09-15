@@ -470,4 +470,4 @@ jobs:
 
 
       - name: Run E2E tests
-        run: PW_CHANNEL=chromium npx nx e2e ${{ matrix.project }} --grep="smoke" --skipInstall
+        run: PW_CHANNEL=chrom npx nx e2e ${{ matrix.project }} --grep="smoke" --skipInstall

@@ -1,0 +1,27 @@
+name: Manual E2E Static Test Runner
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Nx project name (e.g., x-and-ride)'
+        required: true
+        type: string
+
+jobs:
+  e2e:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run E2E tests
+        run: echo "smoke tests"

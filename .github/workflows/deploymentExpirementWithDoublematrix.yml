@@ -467,5 +467,7 @@ jobs:
         run: |
           echo "Running E2E tests for project: ${{ matrix.project }}"
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
-          # Add your actual E2E test command here:
-          # npx nx run "${{ matrix.project }}":e2e
+
+
+      - name: Run E2E tests
+        run: PW_CHANNEL=chromium npx nx e2e e2e-${{ matrix.project }} --grep="smoke" --skipInstall

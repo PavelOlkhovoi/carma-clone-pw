@@ -21,6 +21,7 @@ import {
 } from "@carma-appframeworks/portals";
 import { defaultLayerConf } from "react-cismap/tools/layerFactory";
 
+
 export function App() {
   const { progress, showProgress, handleProgressUpdate } = useProgress();
   useEffect(() => {

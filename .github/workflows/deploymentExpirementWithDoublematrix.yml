@@ -370,25 +370,6 @@ jobs:
         run: |
           ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:build --configuration=production --base="${{ env.BASE_URL }}" --output-style=stream-without-prefixes
         shell: bash
-
-      - name: List all projects with an E2E target
-        id: list_all_e2e_projects
-        shell: bash
-        run: |
-          echo "🔍 Listing all projects that declare an e2e target…"
-          raw=$(npx nx show projects --with-target=e2e)
-          echo "Raw E2E-capable projects (one per line):"
-          echo "$raw"
-          
-          # Normalize newlines to spaces
-          normalized=$(echo "$raw" | tr '\n' ' ')
-          echo
-          echo "Normalized E2E list: →$normalized←"
-
-          # Export for later steps
-          echo "e2e_all_projects=$normalized" >> $GITHUB_OUTPUT
-
-      - name: Debug show captured E2E-capable list
         shell: bash
         run: |
           echo "All E2E projects: ${{ steps.list_all_e2e_projects.outputs.e2e_all_projects }}"
@@ -409,13 +390,76 @@ jobs:
           fi
 
             
-  buildWithTests: 
-    needs: [determine_projects, build]
+  collect_e2e_projects:
+    needs: build
     runs-on: ubuntu-latest
-    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}
+    outputs:
+      e2e_project_list: ${{ steps.create_e2e_matrix.outputs.e2e_project_list }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+          
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+          
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Create E2E project matrix
+        id: create_e2e_matrix
+        shell: bash
+        run: |
+          # Get all projects from the build matrix
+          projects='${{ needs.determine_projects.outputs.project_list }}'
+          echo "Original projects: $projects"
+          
+          # Initialize array for E2E-capable projects
+          e2e_projects=""
+          
+          # Parse the JSON array and check each project
+          for project in $(echo "$projects" | jq -r '.[]'); do
+            e2e_proj="e2e-$project"
+            if npx nx show project "$e2e_proj" >/dev/null 2>&1; then
+              echo "✅ Found E2E project for: $project"
+              if [ -z "$e2e_projects" ]; then
+                e2e_projects="\"$project\""
+              else
+                e2e_projects="$e2e_projects,\"$project\""
+              fi
+            else
+              echo "❌ No E2E project for: $project"
+            fi
+          done
+          
+          # Convert to JSON array
+          if [ -z "$e2e_projects" ]; then
+            e2e_json="[]"
+          else
+            e2e_json="[$e2e_projects]"
+          fi
+          
+          echo "E2E-capable projects: $e2e_json"
+          echo "e2e_project_list=$e2e_json" >> $GITHUB_OUTPUT
+
+  buildWithTests: 
+    needs: [determine_projects, build, collect_e2e_projects]
+    runs-on: ubuntu-latest
+    if: ${{ needs.collect_e2e_projects.outputs.e2e_project_list != '[]' }}
     strategy:
       matrix:
-        project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
+        project: ${{ fromJson(needs.collect_e2e_projects.outputs.e2e_project_list) }}
 
     steps:
       - name: Checkout Repository
@@ -438,7 +482,9 @@ jobs:
       - name: Install Dependencies
         run: npm install
         
-      - name: Run smoke tests for project
+      - name: Run E2E tests for project
         run: |
-          echo "Running smoke tests for project: ${{ matrix.project }}"
-          echo "This corresponds to the build job for ${{ matrix.project }}"
+          e2e_proj="e2e-${{ matrix.project }}"
+          echo "Running E2E tests for project: ${{ matrix.project }}"
+          echo "E2E project: $e2e_proj"
+          # npx nx run "$e2e_proj":e2e

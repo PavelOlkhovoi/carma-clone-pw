@@ -438,7 +438,11 @@ jobs:
     needs: [determine_projects]
     runs-on: self-hosted
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' }}
+    permissions:
+      actions: write
+      contents: read
     strategy:
+      fail-fast: true
       matrix:
         project: ${{ fromJson(needs.determine_projects.outputs.e2e_list) }}
 
@@ -468,6 +472,18 @@ jobs:
           echo "Running E2E tests for project: ${{ matrix.project }}"
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
 
-
       - name: Run E2E tests
         run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skipInstall
+
+      - name: Cancel workflow on smoke test failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run_id = process.env.GITHUB_RUN_ID;
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id,
+            });
+            core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)

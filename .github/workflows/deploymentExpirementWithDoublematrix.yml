@@ -75,7 +75,9 @@ jobs:
         id: cache-npm-determine
         uses: actions/cache@v4
         with:
-          path: ~/.npm
+          path: |
+            ~/.npm
+            node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
@@ -88,7 +90,8 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
       - name: Install dependencies
-        run: npm install
+        if: steps.cache-npm-determine.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Set Directory as Safe
         run: |
@@ -463,9 +466,9 @@ jobs:
 
             
   smokeTest: 
-    # needs: [determine_projects]
-    needs: [all_projects_build]
+    needs: [determine_projects]
     runs-on: ubuntu-latest
+    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' }}
     permissions:
       actions: write
       contents: read

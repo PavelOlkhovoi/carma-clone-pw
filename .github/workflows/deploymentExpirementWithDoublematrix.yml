@@ -266,14 +266,19 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+
       - name: Cache node modules
         id: cache-npm-build
         uses: actions/cache@v4
         with:
-          path: ~/.npm
+          path: |
+            ~/.npm
+            node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+
+      
       - name: Log npm cache hit (build)
         run: |
           echo "npm cache hit: ${{ steps.cache-npm-build.outputs.cache-hit }}"
@@ -433,7 +438,8 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install Dependencies
-        run: npm install
+        if: steps.cache-npm-build.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Build project
         run: |

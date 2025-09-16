@@ -72,12 +72,16 @@ jobs:
           node-version: 20
           cache: "npm"
       - name: Cache node modules
+        id: cache-npm-determine
         uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Log npm cache hit (determine_projects)
+        run: |
+          echo "npm cache hit: ${{ steps.cache-npm-determine.outputs.cache-hit }}"
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |
@@ -263,12 +267,16 @@ jobs:
           node-version: 20
           cache: "npm"
       - name: Cache node modules
+        id: cache-npm-build
         uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Log npm cache hit (build)
+        run: |
+          echo "npm cache hit: ${{ steps.cache-npm-build.outputs.cache-hit }}"
       - name: Read project config
         id: read_project_config
         run: echo "::set-output name=config::$(cat deployment-config.json)"
@@ -502,12 +510,16 @@ jobs:
           node-version: 20
           cache: "npm"
       - name: Cache node modules
+        id: cache-npm-smoke
         uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Log npm cache hit (smokeTest)
+        run: |
+          echo "npm cache hit: ${{ steps.cache-npm-smoke.outputs.cache-hit }}"
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |

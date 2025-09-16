@@ -71,6 +71,13 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |
@@ -255,6 +262,13 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Read project config
         id: read_project_config
         run: echo "::set-output name=config::$(cat deployment-config.json)"
@@ -457,7 +471,13 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |

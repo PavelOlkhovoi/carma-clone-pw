@@ -464,7 +464,7 @@ jobs:
             
   smokeTest: 
     needs: [determine_projects]
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' }}
     permissions:
       actions: write

@@ -61,6 +61,10 @@ jobs:
           fetch-depth: 0
           submodules: "recursive"
       
+      - name: Set Directory as Safe
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      
       - name: Update Submodules
         run: git submodule update --remote --recursive
       
@@ -292,6 +296,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: "recursive"
+      
+      - name: Set Directory as Safe
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
       
       - name: Update Submodules
         run: git submodule update --remote --recursive

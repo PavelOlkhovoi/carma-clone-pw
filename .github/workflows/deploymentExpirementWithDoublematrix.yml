@@ -478,12 +478,12 @@ jobs:
         with:
           fetch-depth: 0
           submodules: "recursive"
-          
+                
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
-
+      
       - name: Cache node_modules
         id: cache-npm-smoke
         uses: actions/cache@v4
@@ -502,19 +502,19 @@ jobs:
         run: |
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-          
+                
       - name: Install Dependencies
         if: steps.cache-npm-smoke.outputs.cache-hit != 'true'
         run: npm ci
-        
+              
       - name: Run E2E tests for project
         run: |
-          echo "Running E2E tests for project: ${{ matrix.project }}"
-          echo "This corresponds to the E2E test job for ${{ matrix.project }}"
-
+                echo "Running E2E tests for project: ${{ matrix.project }}"
+                echo "This corresponds to the E2E test job for ${{ matrix.project }}"
+      
       - name: Run E2E tests
         run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
-
+      
       - name: Cancel workflow on smoke test failure
         if: failure()
         uses: actions/github-script@v7

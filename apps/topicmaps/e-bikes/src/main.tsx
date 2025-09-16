@@ -14,6 +14,7 @@ if (typeof global === "undefined") {
   window.global = window;
 }
 
+
 root.render(
   <StrictMode>
     <GazDataProvider config={gazDataConfig}>

@@ -110,8 +110,9 @@ jobs:
       - name: Build and push dependency image
         id: build_image
         run: |
-          # Create image tag with run ID for uniqueness
-          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/carma-deps:${{ github.run_id }}"
+          # Create image tag with run ID for uniqueness (lowercase required)
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_TAG="ghcr.io/${REPO_OWNER}/carma-deps:${{ github.run_id }}"
           
           # Add registry secret to .npmrc for build
           touch .npmrc

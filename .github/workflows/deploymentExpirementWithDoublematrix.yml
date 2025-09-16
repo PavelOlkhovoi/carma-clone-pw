@@ -458,7 +458,37 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        project: ${{ fromJson(needs.determine_projects.outputs.e2e_list) }}
+        project:
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
 
     steps:
       - name: Checkout Repository

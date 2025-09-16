@@ -463,9 +463,9 @@ jobs:
 
             
   smokeTest: 
-    needs: [determine_projects]
+    # needs: [determine_projects]
+    needs: [all_projects_build]
     runs-on: ubuntu-latest
-    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' || github.event.client_payload['project-name'] == '*' }}
     permissions:
       actions: write
       contents: read
@@ -620,14 +620,25 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-      - name: Install dependencies (CI)
+      - name: Cache node modules
+        id: cache-npm-build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      
+      - name: Log npm cache hit (build)
         run: |
-          # Prefer npm ci in CI for reproducible installs (requires package-lock.json)
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-              npm install
-            fi
+          echo "npm cache hit: ${{ steps.cache-npm-build.outputs.cache-hit }}"
+
+      - name: Install Dependencies
+        if: steps.cache-npm-build.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Get properties from json
         id: get_props_from_json

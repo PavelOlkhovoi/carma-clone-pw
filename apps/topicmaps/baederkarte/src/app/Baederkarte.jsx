@@ -39,7 +39,6 @@ const Baederkarte = () => {
   );
   useSelectionTopicMap();
 
-
   useEffect(() => {
     if (markerSymbolSize) {
       setClusteringOptions({

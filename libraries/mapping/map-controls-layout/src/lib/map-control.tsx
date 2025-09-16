@@ -31,6 +31,7 @@ interface ControlLayoutProps {
   debugMode?: boolean;
 }
 
+
 const ControlContext = createContext<ControlContextType | undefined>(undefined);
 export function useControlContext() {
   const context = useContext(ControlContext);

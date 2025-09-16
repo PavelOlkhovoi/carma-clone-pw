@@ -90,6 +90,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v3
+        with:
+          name: node-modules
+          path: node_modules
+
       - name: Set Directory as Safe
         run: |
           git config --local --add safe.directory "$GITHUB_WORKSPACE"
@@ -510,28 +516,11 @@ jobs:
           node-version: 20
           cache: "npm"
 
-      - name: Cache node_modules
-        id: cache-npm-smoke
-        uses: actions/cache@v4
+      - name: Download node_modules artifact
+        uses: actions/download-artifact@v3
         with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - name: Log npm cache hit (smokeTest)
-        run: |
-          echo "npm cache hit: ${{ steps.cache-npm-smoke.outputs.cache-hit }}"
-      - name: add cismet-dev registry secret to .npmrc
-        shell: bash
-        run: |
-          touch .npmrc
-          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-          
-      - name: Install Dependencies
-        if: steps.cache-npm-smoke.outputs.cache-hit != 'true'
-        run: npm ci
+          name: node-modules
+          path: ./node_modules
         
       - name: Run E2E tests for project
         run: |

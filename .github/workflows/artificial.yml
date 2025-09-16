@@ -1,0 +1,584 @@
+name: Optimized Deployment with Artifact Sharing
+
+run-name: >
+  ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
+  ${{ github.event_name == 'workflow_dispatch' && '👨🏽‍💼 ' || github.event_name == 'repository_dispatch' && '🤖 ' || github.event_name == 'push' && '👨‍💻 ' }}
+  ${{ github.event_name == 'repository_dispatch' && '(' || ''}}${{ github.event.client_payload.actor }}${{ github.event_name == 'repository_dispatch' && ')' || ''}} 
+  :
+  ${{ github.event.head_commit.message }}
+  ${{ github.event.inputs['project-name'] || github.event.client_payload['project-name'] }} 
+  ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
+  ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
+    -
+  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-GitHub-runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      project-name:
+        description: "Please enter a project name"
+        required: true
+      version-manipulator:
+        description: "Release type (one of): patch, minor, major, prepatch, preminor, premajor, prerelease (Will change the version number of the project.)"
+        required: false
+      target:
+        type: choice
+        description: "Where should I deploy?"
+        options:
+          - live
+          - dev
+      create-docker-image:
+        type: boolean
+        description: Create a Docker image? 🐳
+
+  push:
+    branches:
+      - main
+  repository_dispatch:
+    types: [trigger-workflow]
+
+jobs:
+  determine_projects:
+    if: "(github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && !contains(github.event.head_commit.message, 'skip-deploy') && !contains(github.event.head_commit.message, 'no-deploy')"
+    runs-on: ubuntu-latest
+    outputs:
+      project_list: ${{ steps.set_up_matrix.outputs.project_list }}
+      e2e_list: ${{ steps.generate_e2e_list.outputs.e2e_list }}
+      is_affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}
+
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+      - name: Update Submodules
+        run: git submodule update --remote --recursive
+      - name: Print Collaboration Version numbers
+        run: |
+          echo "-------------------------------"
+          echo "All Collaboration Submodules:"
+          echo
+          find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
+          -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - name: Cache node modules
+        id: cache-npm-determine
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Log npm cache hit (determine_projects)
+        run: |
+          echo "npm cache hit: ${{ steps.cache-npm-determine.outputs.cache-hit }}"
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+      - name: Install dependencies
+        if: steps.cache-npm-determine.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # Optimized artifact creation - compress node_modules to reduce size
+      - name: Create compressed node_modules archive
+        run: |
+          echo "Creating compressed node_modules archive..."
+          tar -czf node_modules.tar.gz node_modules/
+          ls -lh node_modules.tar.gz
+          echo "Archive size: $(du -h node_modules.tar.gz | cut -f1)"
+
+      - name: Upload compressed node_modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules-compressed-${{ github.run_id }}
+          path: node_modules.tar.gz
+          retention-days: 1
+          compression-level: 0  # Already compressed
+
+      - name: Set Directory as Safe
+        run: |
+          git config --local --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+        id: setSHAs
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: ${{ steps.extract_branch.outputs.branch }}
+
+      - run: |
+          echo "BASE: ${{ steps.setSHAs.outputs.base }}"
+          echo "HEAD: ${{ steps.setSHAs.outputs.head }}"
+
+      - name: Load deployment configuration
+        id: load_config
+        run: |
+          echo "load_config Projects in deployment" 
+          config=$(cat deployment-config.json)
+          project_keys=$(echo "$config" | jq -r '.projects | keys | map(@json) | @json')
+          echo "project_keys=$project_keys" >> $GITHUB_ENV
+          echo "Projects in deployment configuration: $project_keys"  # Debug output
+          echo "::set-output name=deployment_projects::$project_keys"
+      - name: Run nx command to show affected projects
+        id: list_affected_projects
+        run: |
+          projects=$(npx nx show projects --affected -t build --base=${{ steps.setSHAs.outputs.base }} --head=${{ steps.setSHAs.outputs.head }})
+          projects=$(echo $projects | tr '\n' ' ')
+          echo "Affected projects: $projects"
+          echo "::set-output name=project_list::$projects"
+      - name: Set up matrix
+        if: steps.list_affected_projects.outputs.project_list != ''
+        id: set_up_matrix
+        run: |
+          projects=$(echo "${{ steps.list_affected_projects.outputs.project_list }}")
+          deployments=$(echo "${{ steps.load_config.outputs.deployment_projects }}"  | jq -r '.[]' | tr '\n' ' ')
+
+          # Convert the string into arrays by splitting on spaces
+          IFS=' ' read -r -a project_array <<< "$projects"
+          IFS=' ' read -r -a deployment_array <<< "$deployments"
+
+          # Declare an empty array to store the common elements
+          result_array=()
+
+          # Iterate over each element in project_array
+          for project in "${project_array[@]}"; do
+              # Check if the project exists in deployment_array
+              if [[ " ${deployment_array[@]} " =~ " ${project} " ]]; then
+                  # If it exists, add it to the result_array
+                  result_array+=("$project")
+              fi
+          done
+
+          # Construct the JSON string manually
+          result_json="["
+          for ((i=0; i<${#result_array[@]}; i++)); do
+              if [[ $i -ne 0 ]]; then
+                  result_json="$result_json, "
+              fi
+              result_json="$result_json\"${result_array[i]}\""
+          done
+          result_json="$result_json]"
+
+          echo "::set-output name=project_list::$result_json"
+          echo "PROJECT_LIST=${result_json}" >> $GITHUB_ENV
+      - name: Generate E2E project list
+        if: steps.list_affected_projects.outputs.project_list != ''
+        id: generate_e2e_list
+        run: |
+          # Get the project list from the matrix setup
+          projects='${{ steps.set_up_matrix.outputs.project_list }}'
+          
+          # Initialize empty array for E2E projects
+          e2e_projects="[]"
+          
+          if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
+            # Parse the JSON array and check each project for E2E existence
+            e2e_list="["
+            first=true
+            
+            # Extract project names from JSON array
+            project_names=$(echo "$projects" | jq -r '.[]')
+            
+            for project in $project_names; do
+              e2e_proj="e2e-$project"
+              echo "Checking for E2E project: $e2e_proj"
+              
+              if npx nx show project "$e2e_proj" >/dev/null 2>&1; then
+                echo "✅ E2E project '$e2e_proj' found"
+                if [ "$first" = true ]; then
+                  e2e_list="$e2e_list\"$e2e_proj\""
+                  first=false
+                else
+                  e2e_list="$e2e_list, \"$e2e_proj\""
+                fi
+              else
+                echo "❌ E2E project '$e2e_proj' not found"
+              fi
+            done
+            
+            e2e_list="$e2e_list]"
+            e2e_projects="$e2e_list"
+          fi
+          
+          echo "::set-output name=e2e_list::$e2e_projects"
+          echo "E2E_LIST=$e2e_projects" >> $GITHUB_ENV
+      
+      - name: Debug E2E project list
+        run: |
+          echo "The E2E project list is: ${{ steps.generate_e2e_list.outputs.e2e_list }}"
+      
+      - name: Show project list
+        run: |
+          echo "The project list is |${{ steps.set_up_matrix.outputs.project_list }}|"
+          echo "Is affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}"
+
+  build:
+    needs: determine_projects
+    runs-on: ubuntu-latest
+    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.project_list != '[]' }}
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+      - name: Update Submodules
+        run: git submodule update --remote --recursive
+      - name: Print Collaboration Version numbers
+        run: |
+          echo "-------------------------------"
+          echo "All Collaboration Submodules:"
+          echo
+          find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
+          -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Cache node modules
+        id: cache-npm-build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Log npm cache hit (build)
+        run: |
+          echo "npm cache hit: ${{ steps.cache-npm-build.outputs.cache-hit }}"
+
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+
+      # Optimized dependency installation using compressed artifact
+      - name: Download compressed node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules-compressed-${{ github.run_id }}
+          path: ./
+
+      - name: Extract and use node_modules
+        run: |
+          if [ -f "node_modules.tar.gz" ]; then
+            echo "Extracting compressed node_modules..."
+            tar -xzf node_modules.tar.gz
+            rm node_modules.tar.gz
+            echo "✅ Using node_modules from artifact"
+            ls -la node_modules/ | head -10
+          else
+            echo "❌ Compressed node_modules not found"
+            exit 1
+          fi
+
+      - name: Install Dependencies (fallback)
+        if: steps.cache-npm-build.outputs.cache-hit != 'true'
+        run: |
+          if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
+            echo "node_modules not found or empty, falling back to npm ci"
+            npm ci
+          else
+            echo "Using node_modules from artifact"
+          fi
+
+      - name: Read project config
+        id: read_project_config
+        run: echo "::set-output name=config::$(cat deployment-config.json)"
+        shell: bash
+
+      - name: Extract branch name build
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Debug branch variable
+        run: echo "branch variable" ${{ steps.extract_branch.outputs.branch }}
+
+      - name: Process deploy steps
+        id: process_deploy_steps
+        run: |
+          config=$(cat deployment-config.json)
+
+          project_name="${{ matrix.project }}"
+          branch="${{ steps.extract_branch.outputs.branch }}"
+
+          # Ensure jq variables are passed correctly
+          deploymentManual=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].repo // "null"')
+          baseUrl=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].base // "null"')
+          additionalEnvs=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.envs // [] | join(" ")')
+          orgDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.org // "null"')
+          prjDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.prj // "null"')
+          projectPath=$(echo "$config" | jq -r --arg project "$project_name" '.projects[$project].projectPath // "null"')
+          containerImage=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].container.image // "null"')
+
+          srcPath=".${projectPath#./dist}/src"
+          echo "srcPath: $srcPath"  # Debugging
+
+          srcMD5="$(echo -n $(find $srcPath -type f -exec md5sum {} \; | sort -k 2 | md5sum | cut -f 1 -d ' ')$(md5sum package.json package-lock.json | md5sum | cut -f 1 -d ' ') | md5sum | cut -f 1 -d ' ')"
+          srcMD5short="${srcMD5:0:4}"
+
+          if [ "${baseUrl}" = "null" ]; then
+            if [ "${orgDeploy}" = "null" ]; then
+              baseUrl="/"
+            else
+              baseUrl="https://${orgDeploy}.github.io/${prjDeploy}/"
+            fi
+          else
+            baseUrl="${baseUrl}"
+          fi
+          if [ "${deploymentManual}" = "null" ]; then
+            deployment_project="${orgDeploy}/${prjDeploy}"
+          else
+            deployment_project="${deploymentManual}"
+          fi
+
+          echo "PROJECT_NAME=${{ matrix.project }}" >> $GITHUB_ENV
+          echo "EXTERNAL_REPO=${deployment_project}" >> $GITHUB_ENV
+          echo "BASE_URL=${baseUrl}" >> $GITHUB_ENV
+          echo "PROJECT_PATH=${projectPath}" >> $GITHUB_ENV
+          echo "ORG_DEPLOY=${orgDeploy}" >> $GITHUB_ENV
+          echo "PRJ_DEPLOY=${prjDeploy}" >> $GITHUB_ENV
+          echo "SRC_MD5=${srcMD5}" >> $GITHUB_ENV
+          echo "SRC_MD5_SHORT=${srcMD5short}" >> $GITHUB_ENV
+          echo "SRC_PATH=${srcPath}" >> $GITHUB_ENV
+          echo "CONTAINER_IMAGE=${containerImage}" >> $GITHUB_ENV
+          echo "TARGET=auto.${branch}" >> $GITHUB_ENV
+          echo "ADDITIONAL_ENVS=${additionalEnvs}" >> $GITHUB_ENV
+
+        shell: bash
+      - name: Create version.json if it doesn't exist
+        run: |
+          if [[ ! -f "$SRC_PATH/version.json" ]]; then
+            echo '{"version": "0.0.0"}' > "$SRC_PATH/version.json"
+          fi
+        shell: bash
+      - name: Add further info to version.json
+        run: |
+          jq --arg md5 "$SRC_MD5" --arg triggered "$TARGET" \
+          '. + {md5: $md5, triggered: $triggered}' \
+          "$SRC_PATH/version.json" > /tmp/version.json
+
+          mv /tmp/version.json "$SRC_PATH/version.json"
+        shell: bash
+      - name: Read version from version.json
+        run: |
+          version=$(jq -r '.version // "0.0.0"' "$SRC_PATH/version.json")
+          echo "VERSION=$version" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Debug Outputs
+        run: |
+          echo -----------------------------------
+          echo "-- Project name is: $PROJECT_NAME"
+          echo "ORG_DEPLOY: $ORG_DEPLOY"
+          echo "PROJECT_PATH: $PRJ_DEPLOY"
+          echo "BASE_URL: $BASE_URL"
+          echo "EXTERNAL_REPO: $EXTERNAL_REPO"
+          echo "SRC_PATH: $SRC_PATH"
+          echo "SRC_MD5: $SRC_MD5"
+          echo "CONTAINER_IMAGE: $CONTAINER_IMAGE"
+          echo "TARGET: $TARGET"
+          echo "VERSION: $VERSION"
+          echo "ADDITIONAL_ENVS: $ADDITIONAL_ENVS"
+          echo -----------------------------------
+      - name: Debug version.json
+        run: |
+          cat $SRC_PATH/version.json
+      - name: Set version (deprectated)
+        run: |
+          if [[ -f "$SRC_PATH/version.js" ]]; then
+            sed -i "s/%APPLICATION_VERSION%/$SRC_MD5_SHORT/" $SRC_PATH/version.js
+          else
+            if [[ -f "$SRC_PATH/app/version.js" ]]; then
+              sed -i "s/%APPLICATION_VERSION%/$SRC_MD5_SHORT/" $SRC_PATH/app/version.js
+            else
+              echo "No version.js file found. Version information will not be updated."
+            fi
+          fi
+      - name: Set hash (deprecated)
+        run: |
+          if [[ -f "$SRC_PATH/version.js" ]]; then
+            sed -i "s/%APPLICATION_HASH%/$SRC_MD5/" $SRC_PATH/version.js
+          else
+            if [[ -f "$SRC_PATH/app/version.js" ]]; then
+              sed -i "s/%APPLICATION_HASH%/$SRC_MD5/" $SRC_PATH/app/version.js
+            else
+              echo "No version.js file found. Hash information will not be updated."
+            fi
+          fi
+
+      - name: Build project
+        run: |
+          ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:build --configuration=production --base="${{ env.BASE_URL }}" --output-style=stream-without-prefixes
+        shell: bash
+      
+      - name: Check if E2E project exists and run tests
+        shell: bash
+        run: |
+          e2e_proj="e2e-${{ matrix.project }}"
+          echo "Checking for E2E project: $e2e_proj"
+          
+          if ! npx nx show project "$e2e_proj" >/dev/null 2>&1; then
+            echo "❌ E2E project '$e2e_proj' not found - skipping tests"
+          else
+            echo "✅ E2E project '$e2e_proj' found - running tests"
+            echo "Run tests for $e2e_proj"
+            # Add your actual E2E test command here:
+            # npx nx run "$e2e_proj":e2e
+          fi
+
+  smokeTest: 
+    needs: [determine_projects]
+    runs-on: ubuntu-latest
+    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' }}
+    permissions:
+      actions: write
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        project:
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+          - e2e-klimaorte
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+                
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      
+      - name: Cache node_modules
+        id: cache-npm-smoke
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Log npm cache hit (smokeTest)
+        run: |
+          echo "npm cache hit: ${{ steps.cache-npm-smoke.outputs.cache-hit }}"
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+
+      # Optimized dependency installation using compressed artifact
+      - name: Download compressed node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules-compressed-${{ github.run_id }}
+          path: ./
+
+      - name: Extract and use node_modules
+        run: |
+          if [ -f "node_modules.tar.gz" ]; then
+            echo "Extracting compressed node_modules..."
+            tar -xzf node_modules.tar.gz
+            rm node_modules.tar.gz
+            echo "✅ Using node_modules from artifact"
+          else
+            echo "❌ Compressed node_modules not found"
+            exit 1
+          fi
+
+      - name: Install Dependencies (fallback)
+        if: steps.cache-npm-smoke.outputs.cache-hit != 'true'
+        run: |
+          if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
+            echo "node_modules not found or empty, falling back to npm ci"
+            npm ci
+          else
+            echo "Using node_modules from artifact"
+          fi
+              
+      - name: Run E2E tests for project
+        run: |
+                echo "Running E2E tests for project: ${{ matrix.project }}"
+                echo "This corresponds to the E2E test job for ${{ matrix.project }}"
+      
+      - name: Run E2E tests
+        run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
+      
+      - name: Cancel workflow on smoke test failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run_id = process.env.GITHUB_RUN_ID;
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id,
+            });
+            core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)
+
+  all_projects_build:
+    if: ${{ (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '*' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    outputs:
+      project_list: ${{ steps.get_all_projects.outputs.project_list }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+
+      - name: Get all projects from deployment configuration
+        id: get_all_projects
+        run: |
+          config=$(cat deployment-config.json)
+          project_keys=$(echo "$config" | jq -r '.projects | keys | @json')
+          echo "::set-output name=project_list::$project_keys"

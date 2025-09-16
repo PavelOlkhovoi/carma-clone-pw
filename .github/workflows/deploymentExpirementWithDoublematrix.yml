@@ -523,7 +523,7 @@ jobs:
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
 
       - name: Run E2E tests
-        run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skipInstall
+        run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
 
       - name: Cancel workflow on smoke test failure
         if: failure()

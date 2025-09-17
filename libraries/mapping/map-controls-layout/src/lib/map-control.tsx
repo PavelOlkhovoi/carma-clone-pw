@@ -39,7 +39,6 @@ export function useControlContext() {
   }
   return context;
 }
-
 function ControlLayout({ children }: ControlLayoutProps) {
   const [controls, setControls] = useState<ControlComponent[]>([]);
   const [canvas, setCanvas] = useState<ReactNode | null>(null);

@@ -25,14 +25,14 @@ on:
         description: "Where should I deploy?"
         options:
           - live
-          - main
+          - dev
       create-docker-image:
         type: boolean
         description: Create a Docker image? 🐳
 
   push:
     branches:
-      - dev
+      - main
   repository_dispatch:
     types: [trigger-workflow]
 

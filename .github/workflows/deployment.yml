@@ -81,8 +81,8 @@ jobs:
         run: |
           # Clear npm cache to avoid issues with corrupted cache
           npm cache clean --force
-          # Use npm install to ensure optional dependencies are properly installed
-          npm install --no-optional=false --include=optional
+          # Use legacy peer deps to bypass arborist issues
+          npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Set Directory as Safe
         run: |
@@ -374,8 +374,8 @@ jobs:
         run: |
           # Clear npm cache to avoid issues with corrupted cache
           npm cache clean --force
-          # Use npm install to ensure optional dependencies are properly installed
-          npm install --no-optional=false --include=optional
+          # Use legacy peer deps to bypass arborist issues
+          npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Build project
         run: |
@@ -445,8 +445,8 @@ jobs:
         run: |
           # Clear npm cache to avoid issues with corrupted cache
           npm cache clean --force
-          # Use npm install to ensure optional dependencies are properly installed
-          npm install --no-optional=false --include=optional
+          # Use legacy peer deps to bypass arborist issues
+          npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Get properties from json
         id: get_props_from_json

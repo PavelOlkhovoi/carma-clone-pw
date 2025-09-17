@@ -84,6 +84,11 @@ jobs:
       - name: Log npm cache hit (determine_projects)
         run: |
           echo "npm cache hit: ${{ steps.cache-npm-determine.outputs.cache-hit }}"
+      - name: Print cache size
+        if: steps.cache-npm-determine.outputs.cache-hit == 'true'
+        run: |
+          du -sh ~/.npm node_modules
+        
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |

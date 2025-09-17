@@ -43,4 +43,14 @@ jobs:
           key: ${{ needs.create.outputs.cache-key }}
   
       - run: cat my-folder/file.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
   
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npx nx run baederkarte:build --configuration=development

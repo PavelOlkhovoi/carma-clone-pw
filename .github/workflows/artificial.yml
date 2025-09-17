@@ -96,16 +96,6 @@ jobs:
           retention-days: 1
           compression-level: 0
 
-      - name: Print uploaded artifact size via GitHub API
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ART_NAME="node-modules-compressed-${{ github.run_id }}"
-          echo "Looking for artifact: $ART_NAME"
-            resp=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-            echo "$resp" | jq -r --arg name "$ART_NAME" '.artifacts[] | select(.name==$name) | "\(.name): \(.size_in_bytes) bytes (\(.size_in_bytes/1024/1024) MB)"' || echo "Artifact not found in API response"
-
       - name: Set Directory as Safe
         run: |
           git config --local --add safe.directory "$GITHUB_WORKSPACE"

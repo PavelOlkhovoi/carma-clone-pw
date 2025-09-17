@@ -6,23 +6,26 @@ on:
 jobs:
   create:
     runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
 
       - name: Create folder
         run: mkdir my-folder && echo "cached content" > my-folder/file.txt
 
       - name: Show file content
-        run:  cat my-folder/file.txt
-  
+        run: cat my-folder/file.txt
+
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=my-cache-key-${{ hashFiles('my-folder/file.txt') }}" >> $GITHUB_OUTPUT
+
       - uses: actions/cache@v4
         with:
           path: my-folder
-          key: my-cache-key
+          key: ${{ steps.cache-key.outputs.key }}
   
   use:
     runs-on: ubuntu-latest
@@ -37,7 +40,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: my-folder
-          key: my-cache-key
+          key: ${{ needs.create.outputs.cache-key }}
   
       - run: cat my-folder/file.txt
   

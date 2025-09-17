@@ -33,7 +33,7 @@ on:
 
   push:
     branches:
-      - dev
+      - main
   repository_dispatch:
     types: [trigger-workflow]
 
@@ -94,7 +94,17 @@ jobs:
           name: node-modules-compressed-${{ github.run_id }}
           path: node_modules.tar.gz
           retention-days: 1
-          compression-level: 0  # Already compressed
+          compression-level: 0
+
+      - name: Print uploaded artifact size via GitHub API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ART_NAME="node-modules-compressed-${{ github.run_id }}"
+          echo "Looking for artifact: $ART_NAME"
+            resp=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
+            echo "$resp" | jq -r --arg name "$ART_NAME" '.artifacts[] | select(.name==$name) | "\(.name): \(.size_in_bytes) bytes (\(.size_in_bytes/1024/1024) MB)"' || echo "Artifact not found in API response"
 
       - name: Set Directory as Safe
         run: |
@@ -541,26 +551,3 @@ jobs:
               run_id,
             });
             core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)
-
-  all_projects_build:
-    if: ${{ (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '*' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    outputs:
-      project_list: ${{ steps.get_all_projects.outputs.project_list }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: "recursive"
-
-      - name: Get all projects from deployment configuration
-        id: get_all_projects
-        run: |
-          config=$(cat deployment-config.json)
-          project_keys=$(echo "$config" | jq -r '.projects | keys | @json')
-          echo "::set-output name=project_list::$project_keys"

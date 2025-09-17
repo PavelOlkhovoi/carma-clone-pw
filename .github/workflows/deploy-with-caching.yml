@@ -78,7 +78,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-test
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Log npm cache hit (determine_projects)
@@ -277,7 +277,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-test
           restore-keys: |
             ${{ runner.os }}-node-
 
@@ -630,7 +630,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-test
           restore-keys: |
             ${{ runner.os }}-node-
 

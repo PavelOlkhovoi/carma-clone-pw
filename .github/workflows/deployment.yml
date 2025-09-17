@@ -10,7 +10,7 @@ run-name: >
   ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
   ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
     -
-  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-GitHub-runner
+  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-without-cache
 on:
   workflow_dispatch:
     inputs:
@@ -32,7 +32,7 @@ on:
 
   push:
     branches:
-      - main
+      - dev
   repository_dispatch:
     types: [trigger-workflow]
 

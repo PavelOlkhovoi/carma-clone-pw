@@ -78,11 +78,7 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install dependencies
-        run: |
-          # Clear npm cache to avoid issues with corrupted cache
-          npm cache clean --force
-          # Use legacy peer deps to bypass arborist issues
-          npm install --legacy-peer-deps --no-audit --no-fund
+        run: npm install
 
       - name: Set Directory as Safe
         run: |
@@ -371,11 +367,7 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install Dependencies
-        run: |
-          # Clear npm cache to avoid issues with corrupted cache
-          npm cache clean --force
-          # Use legacy peer deps to bypass arborist issues
-          npm install --legacy-peer-deps --no-audit --no-fund
+        run: npm install
 
       - name: Build project
         run: |
@@ -442,11 +434,7 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install dependencies (CI)
-        run: |
-          # Clear npm cache to avoid issues with corrupted cache
-          npm cache clean --force
-          # Use legacy peer deps to bypass arborist issues
-          npm install --legacy-peer-deps --no-audit --no-fund
+        run: npm install
 
       - name: Get properties from json
         id: get_props_from_json

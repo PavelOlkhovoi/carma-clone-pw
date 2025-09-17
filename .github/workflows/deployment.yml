@@ -66,6 +66,11 @@ jobs:
           find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
           -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
 
+      - name: Clean npm artifacts
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -203,7 +208,10 @@ jobs:
           echo
           find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
           -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
-
+      - name: Clean npm artifacts
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -422,6 +430,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: "recursive"
+      - name: Clean npm artifacts
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
                 
       - uses: actions/setup-node@v4
         with:

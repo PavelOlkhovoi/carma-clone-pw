@@ -1,4 +1,4 @@
-name: Deployment with double matrix
+name: Deploy with caching
 
 run-name: >
   ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
@@ -32,7 +32,7 @@ on:
 
   push:
     branches:
-      - main
+      - dev
   repository_dispatch:
     types: [trigger-workflow]
 

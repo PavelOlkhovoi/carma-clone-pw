@@ -7,7 +7,17 @@ jobs:
   create:
     runs-on: ubuntu-latest
     steps:
-      - run: mkdir my-folder && echo "hello" > my-folder/file.txt
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Create folder
+        run: mkdir my-folder && echo "hello" > my-folder/file.txt
+
+      - name: Show file content
+        run:  cat my-folder/file.txt
   
       # - uses: actions/cache@v4
         #   with:

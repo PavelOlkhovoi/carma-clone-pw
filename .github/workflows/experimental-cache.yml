@@ -14,7 +14,7 @@ jobs:
           submodules: recursive
 
       - name: Create folder
-        run: mkdir my-folder && echo "hello" > my-folder/file.txt
+        run: mkdir my-folder && echo "cached content" > my-folder/file.txt
 
       - name: Show file content
         run:  cat my-folder/file.txt

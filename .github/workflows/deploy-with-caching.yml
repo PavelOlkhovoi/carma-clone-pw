@@ -1,4 +1,4 @@
-name: Deploy with caching
+name: Deploy with cache
 
 run-name: >
   ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
@@ -10,7 +10,7 @@ run-name: >
   ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
   ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
     -
-  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-Cache
+  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-cache
 on:
   workflow_dispatch:
     inputs:

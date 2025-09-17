@@ -90,7 +90,6 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
       - name: Install dependencies
-        if: steps.cache-npm-determine.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Set Directory as Safe
@@ -441,7 +440,6 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install Dependencies
-        if: steps.cache-npm-build.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Build project
@@ -528,7 +526,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-test-1
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Log npm cache hit (smokeTest)
@@ -541,7 +539,6 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
                 
       - name: Install Dependencies
-        if: steps.cache-npm-smoke.outputs.cache-hit != 'true'
         run: npm ci
               
       - name: Run E2E tests for project
@@ -640,7 +637,6 @@ jobs:
           echo "npm cache hit: ${{ steps.cache-npm-build.outputs.cache-hit }}"
 
       - name: Install Dependencies
-        if: steps.cache-npm-build.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Get properties from json

@@ -15,6 +15,7 @@ export type ControlComponent = {
   order: number;
 };
 
+
 interface ControlContextType {
   addControl: (component: ControlComponent) => void;
   removeControl: (component: ControlComponent) => void;
@@ -71,7 +72,7 @@ function ControlLayout({ children }: ControlLayoutProps) {
   const removeCanvas = () => {
     setCanvas(null);
   };
-  
+
 
   return (
     <ControlContext.Provider

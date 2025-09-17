@@ -78,7 +78,11 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          # Clear npm cache to avoid issues with corrupted cache
+          npm cache clean --force
+          # Use npm install to ensure optional dependencies are properly installed
+          npm install --no-optional=false --include=optional
 
       - name: Set Directory as Safe
         run: |
@@ -366,7 +370,11 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          # Clear npm cache to avoid issues with corrupted cache
+          npm cache clean --force
+          # Use npm install to ensure optional dependencies are properly installed
+          npm install --no-optional=false --include=optional
 
       - name: Build project
         run: |
@@ -434,12 +442,10 @@ jobs:
 
       - name: Install dependencies (CI)
         run: |
-          # Prefer npm ci in CI for reproducible installs (requires package-lock.json)
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-              npm install
-            fi
+          # Clear npm cache to avoid issues with corrupted cache
+          npm cache clean --force
+          # Use npm install to ensure optional dependencies are properly installed
+          npm install --no-optional=false --include=optional
 
       - name: Get properties from json
         id: get_props_from_json

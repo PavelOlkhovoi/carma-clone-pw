@@ -71,6 +71,7 @@ function ControlLayout({ children }: ControlLayoutProps) {
   const removeCanvas = () => {
     setCanvas(null);
   };
+  
 
   return (
     <ControlContext.Provider

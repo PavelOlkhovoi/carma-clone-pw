@@ -101,8 +101,39 @@ jobs:
           echo "Total cache size (bytes): $total_bytes"
       
           # Convert to human readable
-          hr() { b=$1; d=''; s=0; S=(Bytes KB MB GB TB); while ((b > 1024 && s < 4)); do d="$(printf ".%02d" $(( (b%1024)*100/1024 )) )"; b=$(( b/1024 )); s=$(( s+1 )); done; echo "$b$d ${S[$s]}"; }
+          hr() { b=$1; d=''; s=0; S=(Bytes KB MB GB TB); while ((b > 1024 && s < 4)); do d="$(printf ".%02d" $(((b%1024)*100/1024)) )"; b=$(( b/1024 )); s=$(( s+1 )); done; echo "$b$d ${S[$s]}"; }
           echo "Total cache size (human): $(hr ${total_bytes:-0})"
+
+      - name: Purge caches if total >= 1 GB
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          threshold=$((1024*1024*1024)) # 1 GiB
+          total_bytes=$(gh cache list --json id,sizeInBytes --jq 'map(.sizeInBytes) | add // 0')
+          echo "Computed total cache size (bytes): $total_bytes"
+          if [ -z "$total_bytes" ]; then
+            echo "No cache entries found. Skipping purge."
+            exit 0
+          fi
+          if [ "$total_bytes" -ge "$threshold" ]; then
+            echo "Total >= 1 GiB. Deleting all caches for this repo..."
+            # Get all cache IDs and delete them one by one
+            ids=$(gh cache list --json id --jq '.[].id')
+            if [ -z "$ids" ]; then
+              echo "No cache IDs returned. Nothing to delete."
+              exit 0
+            fi
+            deleted=0
+            for id in $ids; do
+              echo "Deleting cache id: $id"
+              gh cache delete "$id" --confirm || echo "Failed to delete cache id $id (continuing)"
+              deleted=$((deleted+1))
+            done
+            echo "Deleted $deleted cache entries."
+          else
+            echo "Total < 1 GiB. No purge performed."
+          fi
 
       # - name: Build project
       #   run: npx nx run x-and-ride:build --configuration=production

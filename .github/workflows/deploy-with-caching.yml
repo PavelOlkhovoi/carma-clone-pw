@@ -429,7 +429,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ steps.node-cache-key.outputs.key }}
+          key: ${{ needs.determine_projects.outputs.cache-node-key }}
   
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -524,7 +524,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ needs.create.outputs.cache-node-key }}
+          key: ${{ needs.determine_projects.outputs.cache-node-key }}
   
       - name: Install dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'

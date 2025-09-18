@@ -56,7 +56,7 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
   
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build project
         run: npx nx run x-and-ride:build --configuration=production

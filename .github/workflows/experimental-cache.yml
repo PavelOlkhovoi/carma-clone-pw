@@ -109,6 +109,9 @@ jobs:
           hr() { b=$1; d=''; s=0; S=(Bytes KB MB GB TB); while ((b > 1024 && s < 4)); do d="$(printf ".%02d" $(((b%1024)*100/1024)) )"; b=$(( b/1024 )); s=$(( s+1 )); done; echo "$b$d ${S[$s]}"; }
           echo "Total cache size (human): $(hr ${total_bytes:-0})"
 
+      - name: Show all stored caches
+        run: gh cache list
+
       # - name: Delete all caches
       #   run: gh cache delete --all
 

@@ -15,7 +15,6 @@ export type ControlComponent = {
   order: number;
 };
 
-
 interface ControlContextType {
   addControl: (component: ControlComponent) => void;
   removeControl: (component: ControlComponent) => void;

@@ -112,6 +112,9 @@ jobs:
       - name: Show all stored caches
         run: gh cache list
 
+      - name: Show cache sizes in bytes
+        run: gh cache list --json sizeInBytes
+
       # - name: Delete all caches
       #   run: gh cache delete --all
 

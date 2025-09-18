@@ -32,7 +32,7 @@ on:
 
   push:
     branches:
-      - dev
+      - main
   repository_dispatch:
     types: [trigger-workflow]
 
@@ -79,8 +79,7 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-      - name: Install dependencies
-        run: npm install
+
 
       - name: Generate node_modules cache key
         id: node-cache-key
@@ -88,9 +87,14 @@ jobs:
           echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
 
       - uses: actions/cache@v4
+        id: cache-node
         with:
           path: node_modules
           key: ${{ steps.node-cache-key.outputs.key }}
+
+      - name: Install dependencies
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: npm install
 
       - name: Set Directory as Safe
         run: |

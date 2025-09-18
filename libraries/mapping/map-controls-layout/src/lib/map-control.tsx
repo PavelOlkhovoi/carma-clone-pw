@@ -16,7 +16,6 @@ export type ControlComponent = {
 };
 
 
-
 interface ControlContextType {
   addControl: (component: ControlComponent) => void;
   removeControl: (component: ControlComponent) => void;

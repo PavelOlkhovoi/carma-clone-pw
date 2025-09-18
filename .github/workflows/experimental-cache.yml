@@ -70,11 +70,10 @@ jobs:
           node-version: 20
           cache: "npm"
 
-      # Restore node_modules cache from create job
-      # - uses: actions/cache@v4
-      #   with:
-      #     path: node_modules
-      #     key: ${{ needs.create.outputs.cache-node-key }}
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ needs.create.outputs.cache-node-key }}
 
       - name: Show cache key
         run: echo ${{ needs.create.outputs.cache-node-key }}

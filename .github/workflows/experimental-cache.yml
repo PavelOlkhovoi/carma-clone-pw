@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
+      cache-node-key: ${{ steps.node-cache-key.outputs.key }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +27,27 @@ jobs:
         with:
           path: my-folder
           key: ${{ steps.cache-key.outputs.key }}
+
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+    
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate node_modules cache key
+        id: node-cache-key
+        # Use lockfile (package-lock.json / yarn.lock / pnpm-lock.yaml) — update if you use yarn/pnpm
+        run: |
+          echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ steps.node-cache-key.outputs.key }}
+  
   
   use:
     runs-on: ubuntu-latest
@@ -48,15 +70,15 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          
-      - name: add cismet-dev registry secret to .npmrc
-        shell: bash
-        run: |
-          touch .npmrc
-          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-  
-      - name: Install Dependencies
-        run: npm install
 
+      # Restore node_modules cache from create job
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ needs.create.outputs.cache-node-key }}
+  
+      - name: Show node_modules
+        run: ls -la node_modules || echo "node_modules not found"
+          
       - name: Build project
         run: npx nx run x-and-ride:build --configuration=production

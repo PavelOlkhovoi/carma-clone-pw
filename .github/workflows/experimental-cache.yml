@@ -39,7 +39,6 @@ jobs:
 
       - name: Generate node_modules cache key
         id: node-cache-key
-        # Use lockfile (package-lock.json / yarn.lock / pnpm-lock.yaml) — update if you use yarn/pnpm
         run: |
           echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
 
@@ -72,10 +71,10 @@ jobs:
           cache: "npm"
 
       # Restore node_modules cache from create job
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ needs.create.outputs.cache-node-key }}
+      # - uses: actions/cache@v4
+      #   with:
+      #     path: node_modules
+      #     key: ${{ needs.create.outputs.cache-node-key }}
 
       - name: Show cache key
         run: echo ${{ needs.create.outputs.cache-node-key }}

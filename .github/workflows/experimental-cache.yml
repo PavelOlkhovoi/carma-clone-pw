@@ -92,6 +92,9 @@ jobs:
       - name: Verify GitHub CLI
         run: gh --version
       
-          
+      - name: List all caches in this repo
+        run: gh cache list
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # - name: Build project
       #   run: npx nx run x-and-ride:build --configuration=production

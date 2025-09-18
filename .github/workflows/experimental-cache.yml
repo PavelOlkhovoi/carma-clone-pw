@@ -89,13 +89,8 @@ jobs:
       - name: Show node_modules
         run: ls -la node_modules || echo "node_modules not found"
 
-      - name: Install GitHub CLI
-        uses: cli/cli-action@v2
-      
-      - name: List all caches in this repo
-        run: gh cache list
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify GitHub CLI
+        run: gh --version
       
           
       # - name: Build project

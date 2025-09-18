@@ -76,6 +76,9 @@ jobs:
         with:
           path: node_modules
           key: ${{ needs.create.outputs.cache-node-key }}
+
+      - name: Show cache key
+        run: echo ${{ needs.create.outputs.cache-node-key }}
   
       - name: Show node_modules
         run: ls -la node_modules || echo "node_modules not found"

@@ -293,7 +293,7 @@ export const zoomToFeature = (
     } else {
       const bbox = envelope(selectedFeature.geometry).bbox;
 
-      if (routedMapRef) {
+      if (routedMapRef && bbox) {
         routedMapRef.leafletMap.leafletElement.fitBounds(
           [
             [bbox[3], bbox[2]],

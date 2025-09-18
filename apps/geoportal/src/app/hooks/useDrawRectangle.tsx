@@ -149,7 +149,8 @@ export const useDrawRectangle = (printCb, printOffCb) => {
           scale,
           dpi,
           false,
-          handleClosePrint
+          handleClosePrint,
+          undefined
         );
       };
 
@@ -164,7 +165,8 @@ export const useDrawRectangle = (printCb, printOffCb) => {
           scale,
           dpi,
           true,
-          handleClosePrint
+          handleClosePrint,
+          undefined
         );
       };
 
@@ -177,8 +179,8 @@ export const useDrawRectangle = (printCb, printOffCb) => {
           scale,
           dpi,
           false,
-          handleClosePrint
-          // handleRedraw
+          handleClosePrint,
+          undefined
         );
       };
       window.addEventListener("keydown", handleEscKeyPress);

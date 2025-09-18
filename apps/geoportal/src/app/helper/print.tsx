@@ -522,7 +522,7 @@ function calculateBBox(centerX, centerY, pixelWidth, pixelHeight, dpi, scale) {
 
 function createFeatureFromBBox(bbox) {
   return {
-    type: "Polygon",
+    type: "Polygon" as const,
     crs: { type: "name", properties: { name: "EPSG:3857" } },
     coordinates: [
       [
@@ -577,8 +577,8 @@ export const drawRectanglePrev = (
       orientation,
       scale,
       dpi,
-      handleClosePrint
-      // handleRedraw
+      handleClosePrint,
+      handleRedraw
     );
   }
 };
@@ -591,8 +591,8 @@ const drawRectFromWithBounds = (
   orientation,
   scale,
   dpi,
-  handleClosePrint
-  // handleRedraw
+  handleClosePrint,
+  handleRedraw
 ) => {
   const sw = bounds[0]; // Southwest
   const ne = bounds[1]; // Northeast
@@ -618,8 +618,8 @@ const drawRectFromWithBounds = (
     scale,
     dpi,
     false,
-    handleClosePrint
-    // handleRedraw
+    handleClosePrint,
+    handleRedraw
   );
 
   polygon.on("dragstart", () => {
@@ -657,8 +657,8 @@ export const setPrevSizes = (
   scale,
   dpi,
   hideContent,
-  handleClosePrint
-  // handleRedraw
+  handleClosePrint,
+  handleRedraw
 ) => {
   removePreviewWrapper();
   // const previewDiv = document.getElementById("preview");
@@ -673,8 +673,8 @@ export const setPrevSizes = (
     scale,
     dpi,
     hideContent,
-    handleClosePrint
-    // handleRedraw
+    handleClosePrint,
+    handleRedraw
   );
 };
 
@@ -737,8 +737,8 @@ const createPreviewWrapperItems = (
   scale,
   dpi,
   hideContent,
-  handleClosePrint
-  // handleRedraw
+  handleClosePrint,
+  handleRedraw
 ) => {
   const routedMap = document.getElementById("routedMap");
 
@@ -830,8 +830,8 @@ export const addPreviewWrapper = (
   scale,
   dpi,
   hideContent = false,
-  handleClosePrint
-  // handleRedraw
+  handleClosePrint,
+  handleRedraw
 ) => {
   const { northWest, northEast, southWest } = getPolygonPoints(map);
   if (northWest && northEast && southWest) {
@@ -846,8 +846,8 @@ export const addPreviewWrapper = (
       scale,
       dpi,
       hideContent,
-      handleClosePrint
-      // handleRedraw
+      handleClosePrint,
+      handleRedraw
     );
   }
 };

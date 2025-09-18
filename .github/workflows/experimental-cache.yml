@@ -92,9 +92,17 @@ jobs:
       - name: Verify GitHub CLI
         run: gh --version
       
-      - name: List all caches in this repo
-        run: gh cache list
+      - name: Total cache size in this repo (bytes and human readable)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Sum all cache entries for this repo
+          total_bytes=$(gh cache list --json sizeInBytes --jq 'map(.sizeInBytes) | add // 0')
+          echo "Total cache size (bytes): $total_bytes"
+      
+          # Convert to human readable
+          hr() { b=$1; d=''; s=0; S=(Bytes KB MB GB TB); while ((b > 1024 && s < 4)); do d="$(printf ".%02d" $(( (b%1024)*100/1024 )) )"; b=$(( b/1024 )); s=$(( s+1 )); done; echo "$b$d ${S[$s]}"; }
+          echo "Total cache size (human): $(hr ${total_bytes:-0})"
+
       # - name: Build project
       #   run: npx nx run x-and-ride:build --configuration=production

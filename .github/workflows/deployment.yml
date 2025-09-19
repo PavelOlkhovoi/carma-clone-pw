@@ -1,4 +1,4 @@
-name: Deployment with gh
+name: Deployment without cache
 
 run-name: >
   ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}

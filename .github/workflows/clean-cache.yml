@@ -1,0 +1,47 @@
+name: Cache Cleanup & Install
+
+on:
+#   schedule:
+#     - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      # 🗑️ Delete all previous caches
+      - name: Delete all caches
+        run: gh cache delete --all --confirm
+
+      # 🔑 Generate cache key
+      - name: Generate node_modules cache key
+        id: node-cache-key
+        run: |
+          echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      # 💾 Restore node_modules cache (if available)
+      - uses: actions/cache@v4
+        id: cache-node
+        with:
+          path: node_modules
+          key: ${{ steps.node-cache-key.outputs.key }}
+
+      # 📦 Install dependencies (only if cache miss)
+      - name: Install dependencies
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: npm install

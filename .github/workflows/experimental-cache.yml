@@ -118,6 +118,8 @@ jobs:
       - name: Show total cache sizes in bytes
         run: gh cache list --json sizeInBytes | jq '[.[] .sizeInBytes] | add / 1024 / 1024 | tostring + " MiB"'
 
+      - name: Show if clean cache
+        run: gh cache list --json sizeInBytes | jq '[.[].sizeInBytes] | add > (2*1024*1024*1024)'
 
       # - name: Delete all caches
       #   run: gh cache delete --all

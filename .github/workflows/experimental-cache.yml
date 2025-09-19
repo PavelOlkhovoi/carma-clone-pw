@@ -112,17 +112,18 @@ jobs:
       - name: Show all stored caches
         run: gh cache list
 
-      - name: Show cache sizes in bytes
-        run: gh cache list --json sizeInBytes
-
       - name: Show total cache sizes in bytes
         run: gh cache list --json sizeInBytes | jq '[.[] .sizeInBytes] | add / 1024 / 1024 | tostring + " MiB"'
 
       - name: Show if clean cache
-        run: gh cache list --json sizeInBytes | jq '[.[].sizeInBytes] | add > (2*1024*1024*1024)'
+        id: if-need-clean-cache
+        run: |
+          need_clean=$(gh cache list --json sizeInBytes | jq '[.[].sizeInBytes] | add > (0.2*1024*1024*1024)')
+          echo "need_clean=$need_clean" >> $GITHUB_OUTPUT
 
-      # - name: Delete all caches
-      #   run: gh cache delete --all
+      - name: Delete all caches
+        if: steps.if-need-clean-cache.outputs.need_clean == 'true'
+        run: gh cache delete --all
 
       # - name: Build project
       #   run: npx nx run x-and-ride:build --configuration=production

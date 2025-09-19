@@ -305,7 +305,7 @@ jobs:
           # Ensure jq variables are passed correctly
           deploymentManual=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].repo // "null"')
           baseUrl=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].base // "null"')
-          additionalEnvs=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.envs // [] | join(" ")')
+          additionalEnvs=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.manual[$branch].pages.envs // [] | join(" ")')
           orgDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.org // "null"')
           prjDeploy=$(echo "$config" | jq -r --arg project "$project_name" --arg branch "$branch" '.projects[$project].deployment.auto[$branch].pages.prj // "null"')
           projectPath=$(echo "$config" | jq -r --arg project "$project_name" '.projects[$project].projectPath // "null"')
@@ -820,11 +820,12 @@ jobs:
       - name: Setup e2e test matrix
         id: e2e-tests-matrix
         run: |
-          files=$(find e2e/geoportal/geoportal/src/e2e -name "*.spec.ts" -print | jq -R -s 'split("\n")[:-1]')
-          echo "matrix=$files" >> "$GITHUB_OUTPUT"
+          files=${(find e2e/geoportal/geoportal/src/e2e -name "*.spec.ts" -print | jq -R -s 'split("\n")[:-1]')}
+          echo "matrix=${{ env.E2E_TESTS_MATRIX }}" >> $GITHUB_OUTPUT
 
       - name: Show e2e test matrix
-        run: echo '${{ steps.e2e-tests-matrix.outputs.matrix }}'
+        run: echo "${{ env.E2E_TESTS_MATRIX }}"
+
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |

@@ -982,6 +982,10 @@ jobs:
       
             - name: Install Dependencies
               run: npm install
+
+            - name: Run E2E tests
+              run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall
+              shell: bash
       
             - name: Build project
               run: |

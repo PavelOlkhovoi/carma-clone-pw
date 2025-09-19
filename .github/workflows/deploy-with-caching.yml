@@ -796,6 +796,8 @@ jobs:
   
   single_build:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.e2e-tests-matrix.outputs.matrix }}
     if: ${{ (github.event.inputs['project-name'] || github.event.client_payload['project-name']) != '' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) != '*' }}
     permissions:
       contents: write
@@ -815,6 +817,15 @@ jobs:
           echo
           find libraries -type f -name "package.json" -path "*/*-submodule/package.json" \
             -exec sh -c 'dir=$(dirname "$1"); echo "$(basename "$dir"): $(grep -m1 \"version\" "$1" | sed -E "s/[[:space:]]*\"version\":[[:space:]]*\"([^\"]+)\",/\\1/")"' _ {} \;
+      - name: Setup e2e test matrix
+        id: e2e-tests-matrix
+        run: |
+          files=${(find e2e/geoportal/geoportal/src/e2e -name "*.spec.ts" -print | jq -R -s 'split("\n")[:-1]')}
+          echo "matrix=${{ env.E2E_TESTS_MATRIX }}" >> $GITHUB_OUTPUT
+
+      - name: Show e2e test matrix
+        run: echo "${{ env.E2E_TESTS_MATRIX }}"
+
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |

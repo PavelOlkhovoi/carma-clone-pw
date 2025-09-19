@@ -118,7 +118,7 @@ jobs:
       - name: Show if clean cache
         id: if-need-clean-cache
         run: |
-          need_clean=$(gh cache list --json sizeInBytes | jq '[.[].sizeInBytes] | add > (0.2*1024*1024*1024)')
+          need_clean=$(gh cache list --json sizeInBytes | jq '[.[].sizeInBytes] | add > (8*1024*1024*1024)')
           echo "need_clean=$need_clean" >> $GITHUB_OUTPUT
 
       - name: Delete all caches

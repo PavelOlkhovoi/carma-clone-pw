@@ -2,8 +2,7 @@ name: Cache Cleanup & Install
 
 on:
   schedule:
-    - cron: "50 12 * * *"
-  workflow_dispatch:
+    - cron: "30 11 * * *"
 
 jobs:
   clean:

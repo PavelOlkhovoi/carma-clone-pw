@@ -2,7 +2,7 @@ name: Cache Cleanup & Install
 
 on:
   schedule:
-    - cron: "30 12 * * *"
+    - cron: "00 15 * * *"
 
 jobs:
   clean:

@@ -44,7 +44,7 @@ jobs:
       project_list: ${{ steps.set_up_matrix.outputs.project_list }}
       e2e_list: ${{ steps.generate_e2e_list.outputs.e2e_list }}
       is_affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}
-      cache-node-key: ${{ steps.node-cache-key.outputs.key }}
+      node-modules-cache-key: ${{ steps.node-cache-key.outputs.key }}
 
     permissions:
       contents: read
@@ -80,20 +80,19 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
 
-
       - name: Generate node_modules cache key
         id: node-cache-key
         run: |
           echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
 
       - uses: actions/cache@v4
-        id: cache-node
+        id: determine-job-node-cache
         with:
           path: node_modules
           key: ${{ steps.node-cache-key.outputs.key }}
 
       - name: Install dependencies
-        if: steps.cache-node.outputs.cache-hit != 'true'
+        if: steps.determine-job-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Set Directory as Safe
@@ -429,14 +428,14 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
       - name: Restore node_modules from cache
-        id: node-modules-cache
+        id: build-job-node-cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ needs.determine_projects.outputs.cache-node-key }}
+          key: ${{ needs.determine_projects.outputs.node-modules-cache-key }}
   
       - name: Install dependencies
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        if: steps.build-job-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Build project
@@ -523,14 +522,14 @@ jobs:
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
                 
       - name: Restore node_modules from cache
-        id: node-cache
+        id: smoke-test-node-cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ needs.determine_projects.outputs.cache-node-key }}
+          key: ${{ needs.determine_projects.outputs.node-modules-cache-key }}
   
       - name: Install dependencies
-        if: steps.node-cache.outputs.cache-hit != 'true'
+        if: steps.smoke-test-node-cache.outputs.cache-hit != 'true'
         run: npm install
               
       - name: Run E2E tests for project
@@ -612,24 +611,21 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-      - name: Cache node modules
-        id: cache-npm-build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-test-1
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       
-      - name: Log npm cache hit (build)
+      - name: Generate node_modules cache key
+        id: node-cache-key
         run: |
-          echo "npm cache hit: ${{ steps.cache-npm-build.outputs.cache-hit }}"
-
-      - name: Install Dependencies
-        run: npm ci
+          echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
+    
+      - uses: actions/cache@v4
+        id: build-each-job-node-cache
+        with:
+          path: node_modules
+          key: ${{ steps.node-cache-key.outputs.key }}
+    
+      - name: Install dependencies
+        if: steps.build-each-job-node-cache.outputs.cache-hit != 'true'
+        run: npm install
 
       - name: Get properties from json
         id: get_props_from_json
@@ -822,9 +818,22 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-      - name: Install Dependencies
+     
+      - name: Generate node_modules cache key
+        id: node-cache-key
+        run: |
+          echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
+  
+      - uses: actions/cache@v4
+        id: single-job-node-cache
+        with:
+          path: node_modules
+          key: ${{ steps.node-cache-key.outputs.key }}
+  
+      - name: Install dependencies
+        if: steps.single-job-node-cache.outputs.cache-hit != 'true'
         run: npm install
-
+      
       - name: Run E2E tests
         run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall
       

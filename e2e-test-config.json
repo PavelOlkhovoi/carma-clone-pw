@@ -1,7 +1,7 @@
 {
   "projects": {
     "stadtplan": {
-      "smoke": false,
+      "smoke": true,
       "live": true
     },
     "kulturstadtplan": {
@@ -9,8 +9,36 @@
       "live": true
     },
     "geoportal": {
-      "smoke": false,
+      "smoke": true,
       "live": false
+    },
+    "e-auto-ladestation": {
+      "smoke": true,
+      "live": true
+    },
+    "e-bikes": {
+      "smoke": true,
+      "live": true
+    },
+    "kita-finder": {
+      "smoke": true,
+      "live": true
+    },
+    "klimaorte": {
+      "smoke": true,
+      "live": true
+    },
+    "luftmessstationen": {
+      "smoke": true,
+      "live": true
+    },
+    "x-and-ride": {
+      "smoke": true,
+      "live": true
+    },
+    "baederkarte": {
+      "smoke": true,
+      "live": true
     }
   }
 }

@@ -466,7 +466,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
+        project: ${{ fromJson(needs.determine_projects.outputs.e2e_list) }}
 
     steps:
       - name: Checkout Repository

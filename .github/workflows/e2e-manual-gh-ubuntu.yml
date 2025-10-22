@@ -15,36 +15,34 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    # env:
-    # CI: true
-    # Remove SKIP_BROWSER_DOWNLOAD when installing browsers explicitly
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          submodules: "recursive"
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "npm"
 
-      - name: Configure npm cache
+      - name: add cismet-dev registry secret to .npmrc
+        shell: bash
+        run: |
+          touch .npmrc
+          echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
+
+      - name: Restore node_modules from cache
+        id: smoke-test-node-cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          path: node_modules
+          key: ${{ needs.determine_projects.outputs.node-modules-cache-key }}
 
-      - name: Configure npm for GitHub packages
-        run: |
-          echo "@cismet-dev:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-
-      - name: Install Dependencies
-        run: npm i
+      - name: Install dependencies
+        if: steps.smoke-test-node-cache.outputs.cache-hit != 'true'
+        run: npm install
 
       - name: Run E2E tests (all tests)
         if: github.event.inputs['test-name'] == ''

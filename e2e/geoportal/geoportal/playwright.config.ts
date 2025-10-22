@@ -11,16 +11,17 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:4222",
+    baseURL: "http://localhost:4111",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-        navigationTimeout: 15_000, actionTimeout: 10_000,
+    navigationTimeout: 15_000, // Reduce navigation timeout
+    actionTimeout: 10_000, // Add action timeout
   },
   projects: [
     {
       name: "chrome",
       use: {
-        // Use PW_CHANNEL to select system Chrome if desired
+        // Use PW_CHANNEL to select system Chrome; otherwise bundled Chromium
         channel: process.env.PW_CHANNEL || undefined,
       },
     },
@@ -30,7 +31,5 @@ export default defineConfig({
     url: "http://localhost:4222",
     reuseExistingServer: false,
     timeout: 60_000,
-    stdout: 'pipe',
-    stderr: 'pipe',
   },
 });

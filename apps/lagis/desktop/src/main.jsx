@@ -118,7 +118,7 @@ const router = createHashRouter([
     ),
   },
 ]);
-const queryClient = new QueryClient();
+// const queryClient = new QueryClient();
 const persistor = persistStore(store);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

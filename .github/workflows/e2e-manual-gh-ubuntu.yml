@@ -51,8 +51,8 @@ jobs:
 
       - name: Run E2E tests (all tests)
         if: github.event.inputs['test-name'] == ''
-        run: npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall --parallel=1
+        run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall --parallel=1
 
       - name: Run E2E tests (specific test)
         if: github.event.inputs['test-name'] != ''
-        run: npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall --grep="${{ github.event.inputs['test-name'] }}"
+        run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall --grep="${{ github.event.inputs['test-name'] }}"

@@ -1,7 +1,7 @@
 {
   "projects": {
     "stadtplan": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "kulturstadtplan": {
@@ -9,7 +9,7 @@
       "live": true
     },
     "geoportal": {
-      "smoke": true,
+      "smoke": false,
       "live": false
     }
   }

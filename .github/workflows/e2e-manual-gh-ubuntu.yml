@@ -7,6 +7,10 @@ on:
         description: "Nx project name (e.g., x-and-ride)"
         required: true
         type: string
+      test-name:
+        description: "Specific test name to run (optional)"
+        required: false
+        type: string
 
 jobs:
   e2e:
@@ -42,5 +46,10 @@ jobs:
       - name: Install Dependencies
         run: npm i
 
-      - name: Run E2E tests
+      - name: Run E2E tests (all tests)
+        if: github.event.inputs['test-name'] == ''
         run: npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall --parallel=1
+
+      - name: Run E2E tests (specific test)
+        if: github.event.inputs['test-name'] != ''
+        run: npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --skip-nx-cache --skipInstall --grep="${{ github.event.inputs['test-name'] }}"

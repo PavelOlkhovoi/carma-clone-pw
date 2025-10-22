@@ -11,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:4111",
+    baseURL: "http://localhost:4222",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     navigationTimeout: 15_000, // Reduce navigation timeout

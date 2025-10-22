@@ -1,0 +1,16 @@
+{
+  "projects": {
+    "stadtplan": {
+      "smoke": true,
+      "live": true
+    },
+    "kulturstadtplan": {
+      "smoke": true,
+      "live": true
+    },
+    "geoportal": {
+      "smoke": true,
+      "live": false
+    }
+  }
+}

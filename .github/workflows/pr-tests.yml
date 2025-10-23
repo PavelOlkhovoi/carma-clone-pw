@@ -1,22 +1,14 @@
 name: Run on Pull Request
 run-name: >
-  ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
-  ${{ github.event_name == 'workflow_dispatch' && '👨🏽‍💼 ' || github.event_name == 'repository_dispatch' && '🤖 ' || github.event_name == 'push' && '👨‍💻 ' }}
-  ${{ github.event_name == 'repository_dispatch' && '(' || ''}}${{ github.event.client_payload.actor }}${{ github.event_name == 'repository_dispatch' && ')' || ''}} 
-  :
-  ${{ github.event.head_commit.message }}
-  ${{ github.event.inputs['project-name'] || github.event.client_payload['project-name'] }} 
-  ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
-  ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
-    -
-  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-cache
+  🔍 PR Tests: ${{ github.event.pull_request.title }}
+  (Branch: ${{ github.head_ref }})
 on:
   pull_request:
     branches:
       - main
 
 jobs:
-    determine_projects:
+  determine_projects:
     runs-on: ubuntu-latest
     outputs:
       project_list: ${{ steps.set_up_matrix.outputs.project_list }}
@@ -211,10 +203,10 @@ jobs:
           echo "The project list is |${{ steps.set_up_matrix.outputs.project_list }}|"
           echo "Is affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}"
 
-   smokeTest:
+  smokeTest:
     needs: [determine_projects]
     runs-on: ubuntu-latest
-    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && (github.event.inputs['project-name'] || github.event.client_payload['project-name']) == '' && needs.determine_projects.outputs.e2e_list != '[]' }}
+    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && needs.determine_projects.outputs.e2e_list != '[]' }}
     permissions:
       actions: write
       contents: read
@@ -241,7 +233,7 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-            - name: Generate node_modules cache key
+      - name: Generate node_modules cache key
         id: node-cache-key
         run: |
           echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
@@ -256,7 +248,7 @@ jobs:
       - name: Install dependencies
         if: steps.e2e-manual-node-cache.outputs.cache-hit != 'true'
         run: npm install
-        
+
       - name: Run E2E tests for project
         run: |
           echo "Running E2E tests for project: ${{ matrix.project }}"

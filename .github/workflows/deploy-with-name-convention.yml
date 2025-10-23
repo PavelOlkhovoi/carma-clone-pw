@@ -1,4 +1,4 @@
-name: Deploy with cache
+name: Deploy name convention
 
 run-name: >
   ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
@@ -32,7 +32,7 @@ on:
 
   push:
     branches:
-      - dev
+      - main
   repository_dispatch:
     types: [trigger-workflow]
 

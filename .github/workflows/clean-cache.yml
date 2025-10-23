@@ -2,7 +2,7 @@ name: Cache Cleanup & Install
 
 on:
   schedule:
-    - cron: "00 18 * * *"
+    - cron: "08 18 * * *"
 
 jobs:
   clean:
@@ -21,15 +21,13 @@ jobs:
 
       # Delete all previous caches
       - name: Delete all caches
-        run: gh cache delete --all 
+        run: gh cache delete --all
 
-      
       - name: add cismet-dev registry secret to .npmrc
         shell: bash
         run: |
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
-
 
       # Install dependencies (only if cache miss)
       - name: Install dependencies
@@ -40,7 +38,7 @@ jobs:
         id: node-cache-key
         run: |
           echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
-    
+
       # Restore node_modules cache (if available)
       - uses: actions/cache@v4
         id: cache-node

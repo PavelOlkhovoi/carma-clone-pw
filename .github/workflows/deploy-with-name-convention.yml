@@ -192,9 +192,6 @@ jobs:
           # Get the project list from the matrix setup
           projects='${{ steps.set_up_matrix.outputs.project_list }}'
 
-          # Load e2e-test-config.json
-          e2e_config=$(cat e2e-test-config.json)
-
           # Initialize empty array for E2E projects
           e2e_projects="[]"
 
@@ -214,11 +211,26 @@ jobs:
               if npx nx show project "$e2e_proj" >/dev/null 2>&1; then
                 echo "✅ E2E project '$e2e_proj' found in nx workspace"
                 
-                # Check if project exists in e2e-test-config.json and has smoke: true
-                smoke_test=$(echo "$e2e_config" | jq -r --arg project "$project" '.projects[$project].smoke // false')
+                # Get the E2E project path
+                e2e_project_path=$(npx nx show project "$e2e_proj" --json | jq -r '.root')
                 
-                if [ "$smoke_test" = "true" ]; then
-                  echo "✅ Project '$project' has smoke test enabled in e2e-test-config.json"
+                # Check if there are any test files that contain tests starting with "smoke"
+                smoke_tests_found=false
+                if [ -d "$e2e_project_path" ]; then
+                  # Search for test files and check if they contain tests starting with "smoke"
+                  while IFS= read -r -d '' test_file; do
+                    if grep -q "^\s*test\s*(\s*['\"]smoke" "$test_file" || \
+                       grep -q "^\s*it\s*(\s*['\"]smoke" "$test_file" || \
+                       grep -q "^\s*describe\s*(\s*['\"]smoke" "$test_file"; then
+                      echo "✅ Found smoke test in: $test_file"
+                      smoke_tests_found=true
+                      break
+                    fi
+                  done < <(find "$e2e_project_path" -name "*.spec.ts" -o -name "*.spec.js" -o -name "*.test.ts" -o -name "*.test.js" -print0)
+                fi
+                
+                if [ "$smoke_tests_found" = true ]; then
+                  echo "✅ Project '$e2e_proj' has smoke tests - adding to list"
                   if [ "$first" = true ]; then
                     e2e_list="$e2e_list\"$e2e_proj\""
                     first=false
@@ -226,7 +238,7 @@ jobs:
                     e2e_list="$e2e_list, \"$e2e_proj\""
                   fi
                 else
-                  echo "❌ Project '$project' not found in e2e-test-config.json or smoke test disabled"
+                  echo "❌ Project '$e2e_proj' has no smoke tests - skipping"
                 fi
               else
                 echo "❌ E2E project '$e2e_proj' not found in nx workspace"

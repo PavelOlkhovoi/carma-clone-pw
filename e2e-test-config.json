@@ -1,59 +1,59 @@
 {
   "projects": {
     "stadtplan": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "kulturstadtplan": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "geoportal": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "e-auto-ladestation": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "e-bikes": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "kita-finder": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "klimaorte": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "luftmessstationen": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "x-and-ride": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "baederkarte": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "potenzialflaechen-online": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "verkehrszeichenkataster": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "lagis-desktop": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "verdis-desktop": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     }
   }

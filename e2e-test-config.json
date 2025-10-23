@@ -41,7 +41,7 @@
       "live": true
     },
     "potenzialflaechen-online": {
-      "smoke": true,
+      "smoke": false,
       "live": true
     },
     "verkehrszeichenkataster": {
@@ -50,11 +50,11 @@
     },
     "lagis-desktop": {
       "smoke": true,
-      "live": true
+      "live": false
     },
     "verdis-desktop": {
       "smoke": true,
-      "live": true
+      "live": false
     }
   }
 }

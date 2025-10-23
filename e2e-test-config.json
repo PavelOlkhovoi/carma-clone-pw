@@ -47,6 +47,14 @@
     "verkehrszeichenkataster": {
       "smoke": true,
       "live": true
+    },
+    "lagis-desktop": {
+      "smoke": true,
+      "live": true
+    },
+    "verdis-desktop": {
+      "smoke": true,
+      "live": true
     }
   }
 }

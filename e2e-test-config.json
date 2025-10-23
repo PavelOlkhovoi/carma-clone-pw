@@ -39,6 +39,10 @@
     "baederkarte": {
       "smoke": true,
       "live": true
+    },
+    "potenzialflaechen-online": {
+      "smoke": true,
+      "live": true
     }
   }
 }

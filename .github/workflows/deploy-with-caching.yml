@@ -152,8 +152,6 @@ jobs:
           # Declare an empty array to store the common elements
           result_array=()
 
-
-
           # Print the content of deployment_array for debugging
           # echo "Deployment String: $deployments"
           # echo "Deployment array content: ${deployment_array[@]}"

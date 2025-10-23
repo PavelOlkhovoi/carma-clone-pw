@@ -214,14 +214,12 @@ jobs:
                 # Get the E2E project path
                 e2e_project_path=$(npx nx show project "$e2e_proj" --json | jq -r '.root')
                 
-                # Check if there are any test files that contain tests starting with "smoke"
+                # Check if there are any test files that contain tests with "smoke"
                 smoke_tests_found=false
                 if [ -d "$e2e_project_path" ]; then
-                  # Search for test files and check if they contain tests starting with "smoke"
+                  # Search for test files and check if they contain "smoke" in test descriptions or file names
                   while IFS= read -r -d '' test_file; do
-                    if grep -q "^\s*test\s*(\s*['\"]smoke" "$test_file" || \
-                       grep -q "^\s*it\s*(\s*['\"]smoke" "$test_file" || \
-                       grep -q "^\s*describe\s*(\s*['\"]smoke" "$test_file"; then
+                    if grep -qi "smoke" "$test_file" || [[ "$(basename "$test_file")" == *"smoke"* ]]; then
                       echo "✅ Found smoke test in: $test_file"
                       smoke_tests_found=true
                       break

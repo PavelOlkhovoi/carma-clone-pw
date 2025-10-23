@@ -2,6 +2,7 @@ import { Card } from "antd";
 import Map from "./components/commons/Map";
 
 function App() {
+  console.log("verkehrszeichenkataster");
   return (
     <div className="h-full max-h-[calc(100vh-73px)] w-full bg-zinc-200 p-2 flex flex-col items-center gap-2">
       <div className="flex gap-2 items-center h-1/3 w-full">

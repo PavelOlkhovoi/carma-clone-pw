@@ -51,6 +51,7 @@ const EMobiKarte = () => {
   useSelectionTopicMap();
 
   useEffect(() => {
+    console.log("markerSymbolSize");
     if (markerSymbolSize) {
       setClusteringOptions({
         ...clusteringOptions,

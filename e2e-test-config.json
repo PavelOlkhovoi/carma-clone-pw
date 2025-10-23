@@ -43,6 +43,10 @@
     "potenzialflaechen-online": {
       "smoke": true,
       "live": true
+    },
+    "verkehrszeichenkataster": {
+      "smoke": true,
+      "live": true
     }
   }
 }

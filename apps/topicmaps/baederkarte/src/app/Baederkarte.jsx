@@ -38,7 +38,7 @@ const Baederkarte = () => {
     ResponsiveTopicMapContext
   );
   useSelectionTopicMap();
-  
+  console.log("baederkarte");
 
   useEffect(() => {
     if (markerSymbolSize) {
@@ -129,4 +129,3 @@ const Baederkarte = () => {
 };
 
 export default Baederkarte;
-

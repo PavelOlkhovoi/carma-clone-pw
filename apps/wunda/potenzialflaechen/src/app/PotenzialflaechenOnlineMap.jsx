@@ -44,6 +44,8 @@ import {
 } from "@carma-mapping/components";
 import { TAILWIND_CLASSNAMES_FULLSCREEN_FIXED } from "@carma-commons/utils";
 
+// import consolere from "console-remote-client";
+
 // consolere.connect({
 //   server: "http://bender:8088",
 //   channel: "pf", // required

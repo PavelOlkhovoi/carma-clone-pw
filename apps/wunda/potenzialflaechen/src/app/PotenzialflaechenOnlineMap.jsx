@@ -243,7 +243,6 @@ function PotenzialflaechenOnlineMap({
             setJWT={setJWT}
             setLoginInfo={setLoginInfo}
           />
-          {/* <LogSelection /> */}
         </TopicMapComponent>
       </ControlLayout>
     </div>

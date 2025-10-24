@@ -1,4 +1,4 @@
-name: Run on Pull Request
+name: Check PR
 run-name: >
   🔍 PR checks: ${{ github.event.pull_request.title }}
 on:

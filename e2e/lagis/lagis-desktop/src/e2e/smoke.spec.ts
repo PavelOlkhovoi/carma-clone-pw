@@ -881,34 +881,56 @@ test.describe("lagis smoke test", () => {
       (route) => {
         const requestBody = route.request().postDataJSON();
 
-        // Check if it's a gemarkung query
-        if (requestBody.query.includes("gemarkung")) {
-          return route.fulfill({
-            status: 200,
-            contentType: "application/json",
-            body: JSON.stringify(gemarkung),
-          });
-        }
-
-        // Check if it's a flurstuecke query
+        // Check if it's a flurstuecke query FIRST (since it also contains "gemarkung")
         if (requestBody.query.includes("view_flurstueck_schluessel")) {
+          console.log('🎯 Handling flurstuecke query with multiple parcels');
           return route.fulfill({
             status: 200,
             contentType: "application/json",
             body: JSON.stringify({
               data: {
                 view_flurstueck_schluessel: [
-                  // Add sample flurstueck data here
                   {
-                    lfk: 2197,
                     alkis_id: "053001-003-00039",
-                    gemarkung: "Barmen",
-                    flur: "3",
-                    label: "39/0",
+                    schluessel_id: 2197,
+                    flurstueckart: "städtisch",
+                    historisch: false
                   },
+                  {
+                    alkis_id: "053001-003-00040",
+                    schluessel_id: 2198,
+                    flurstueckart: "städtisch",
+                    historisch: false
+                  },
+                  {
+                    alkis_id: "053001-003-00041",
+                    schluessel_id: 2199,
+                    flurstueckart: "städtisch",
+                    historisch: false
+                  }
                 ],
+                gemarkung: [
+                  {
+                    schluessel: 3001,
+                    bezeichnung: "Barmen"
+                  },
+                  {
+                    schluessel: 3271,
+                    bezeichnung: "Haan"
+                  }
+                ]
               },
             }),
+          });
+        }
+
+        // Check if it's a gemarkung-only query
+        if (requestBody.query.includes("gemarkung")) {
+          console.log('🎯 Handling gemarkung-only query');
+          return route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify(gemarkung),
           });
         }
 
@@ -943,6 +965,41 @@ test.describe("lagis smoke test", () => {
 
     // Check for "Karte" text
     await expect(page.locator("text=Karte")).toBeVisible();
+
+    // Debug: Check if LandParcelChooser is now visible
+    console.log('🔍 Checking for LandParcelChooser after authentication...');
+    
+    // Wait a bit more for data to load
+    await page.waitForTimeout(2000);
+    
+    const selectElements = page.locator('.ant-select');
+    const selectCount = await selectElements.count();
+    console.log('🔍 Found .ant-select elements:', selectCount);
+    
+    if (selectCount > 0) {
+      for (let i = 0; i < selectCount; i++) {
+        const element = selectElements.nth(i);
+        const isVisible = await element.isVisible();
+        const boundingBox = await element.boundingBox();
+        const innerHTML = await element.innerHTML().catch(() => 'Error getting innerHTML');
+        console.log(`   Select ${i}: visible=${isVisible}, boundingBox=${JSON.stringify(boundingBox)}`);
+        console.log(`   Content: ${innerHTML.substring(0, 100)}...`);
+      }
+    }
+    
+    // Check specifically for LandParcelChooser in the header
+    const headerArea = page.locator('.h-\\[32px\\]');
+    const headerExists = await headerArea.count() > 0;
+    console.log('🔍 Header area exists:', headerExists);
+    
+    if (headerExists) {
+      const headerHTML = await headerArea.innerHTML().catch(() => 'Error getting innerHTML');
+      const hasSelect = headerHTML.includes('ant-select');
+      console.log('🔍 Header contains ant-select:', hasSelect);
+      if (hasSelect) {
+        console.log('✅ LandParcelChooser should be visible in header!');
+      }
+    }
 
     // Add query param
 

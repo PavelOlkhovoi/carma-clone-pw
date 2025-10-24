@@ -43,6 +43,7 @@ import SIMComponentDictionary from "@carma-collab/wuppertal/secondary-info-modal
 const SecondaryInfoModal = SIMComponentDictionary["ebikesSIM"];
 
 const Map = () => {
+  console.log("Map");
   const { setClusteringOptions } = useContext<
     typeof FeatureCollectionDispatchContext
   >(FeatureCollectionDispatchContext);

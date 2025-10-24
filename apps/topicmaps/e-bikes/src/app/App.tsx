@@ -26,7 +26,6 @@ export function App() {
   useEffect(() => {
     document.title = "E-Fahrrad-Karte Wuppertal";
   }, []);
-  console.log("App");
 
   return (
     <TopicMapContextProvider

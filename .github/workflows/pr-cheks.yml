@@ -1,6 +1,6 @@
 name: Check PR
 run-name: >
-  🔍 PR checks: ${{ github.event.pull_request.title }} [${{ join(github.event.pull_request.labels.*.name, ', ') }}]
+  🔍 PR checks: ${{ github.event.pull_request.title }}
 on:
   pull_request:
     branches:

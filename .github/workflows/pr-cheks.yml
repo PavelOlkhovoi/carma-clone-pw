@@ -203,9 +203,9 @@ jobs:
           echo "Is affected: ${{ steps.list_affected_projects.outputs.project_list != '' }}"
 
   build:
-    needs: [determine_projects]
+    needs: determine_projects
     runs-on: ubuntu-latest
-    if: ${{ needs.determine_projects.outputs.is_affected == 'true' }}
+    if: ${{ needs.determine_projects.outputs.is_affected == 'true' && needs.determine_projects.outputs.project_list != '[]' }}
     strategy:
       matrix:
         project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}

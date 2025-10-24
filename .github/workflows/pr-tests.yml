@@ -1,7 +1,6 @@
 name: Run on Pull Request
 run-name: >
-  🔍 PR Tests: ${{ github.event.pull_request.title }}
-  (Branch: ${{ github.head_ref }})
+  🔍 PR checks: ${{ github.event.pull_request.title }}
 on:
   pull_request:
     branches:

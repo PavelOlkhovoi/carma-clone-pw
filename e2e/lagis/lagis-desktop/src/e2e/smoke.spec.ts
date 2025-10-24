@@ -758,6 +758,93 @@ const responseWithTwoOffices = {
   },
 };
 
+const gemarkung = {
+  data: {
+    gemarkung: [
+      {
+        schluessel: 3271,
+        bezeichnung: "Haan",
+      },
+      {
+        schluessel: 3001,
+        bezeichnung: "Barmen",
+      },
+      {
+        schluessel: 3485,
+        bezeichnung: "Beyenburg",
+      },
+      {
+        schluessel: 3279,
+        bezeichnung: "Cronenberg",
+      },
+      {
+        schluessel: 3278,
+        bezeichnung: "Dönberg",
+      },
+      {
+        schluessel: 3135,
+        bezeichnung: "Elberfeld",
+      },
+      {
+        schluessel: 3486,
+        bezeichnung: "Langerfeld",
+      },
+      {
+        schluessel: 3487,
+        bezeichnung: "Nächstebreck",
+      },
+      {
+        schluessel: 3267,
+        bezeichnung: "Ronsdorf",
+      },
+      {
+        schluessel: 3276,
+        bezeichnung: "Schöller",
+      },
+      {
+        schluessel: 3277,
+        bezeichnung: "Vohwinkel",
+      },
+      {
+        schluessel: 3422,
+        bezeichnung: "Oberdüssel",
+      },
+      {
+        schluessel: 1339,
+        bezeichnung: "Schwelm",
+      },
+      {
+        schluessel: 3430,
+        bezeichnung: "Wald",
+      },
+      {
+        schluessel: 3266,
+        bezeichnung: "Remscheid",
+      },
+      {
+        schluessel: 4139,
+        bezeichnung: "Neukirchen",
+      },
+      {
+        schluessel: 1329,
+        bezeichnung: "Gennebreck",
+      },
+      {
+        schluessel: 4241,
+        bezeichnung: "Radevormwald",
+      },
+      {
+        schluessel: 1314,
+        bezeichnung: "Ennepetal",
+      },
+      {
+        schluessel: 3257,
+        bezeichnung: "Burg",
+      },
+    ],
+  },
+};
+
 test.describe("lagis smoke test", () => {
   test("main page show map, menu, cards, combo boxes after authorisation", async ({
     page,
@@ -765,15 +852,15 @@ test.describe("lagis smoke test", () => {
   }) => {
     await setupAllMocks(context);
     await mockOMTMapHosting(context);
-    await context.route(
-      "https://lagis-api.cismet.de/graphql/LAGIS/execute",
-      (route) =>
-        route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify(responseWithTwoOffices),
-        })
-    );
+    // await context.route(
+    //   "https://lagis-api.cismet.de/graphql/LAGIS/execute",
+    //   (route) =>
+    //     route.fulfill({
+    //       status: 200,
+    //       contentType: "application/json",
+    //       body: JSON.stringify(gemarkung),
+    //     })
+    // );
 
     await context.route("https://lagis-api.cismet.de/users", (route) =>
       route.fulfill({
@@ -788,6 +875,52 @@ test.describe("lagis smoke test", () => {
         }),
       })
     );
+    // Add this mock for flurstuecke data
+    await context.route(
+      "https://lagis-api.cismet.de/graphql/LAGIS/execute",
+      (route) => {
+        const requestBody = route.request().postDataJSON();
+
+        // Check if it's a gemarkung query
+        if (requestBody.query.includes("gemarkung")) {
+          return route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify(gemarkung),
+          });
+        }
+
+        // Check if it's a flurstuecke query
+        if (requestBody.query.includes("view_flurstueck_schluessel")) {
+          return route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+              data: {
+                view_flurstueck_schluessel: [
+                  // Add sample flurstueck data here
+                  {
+                    lfk: 2197,
+                    alkis_id: "053001-003-00039",
+                    gemarkung: "Barmen",
+                    flur: "3",
+                    label: "39/0",
+                  },
+                ],
+              },
+            }),
+          });
+        }
+
+        // Default fallback
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(responseWithTwoOffices),
+        });
+      }
+    );
+
     // Navigate to the application
     await page.goto("/");
     // Check initial page load
@@ -811,8 +944,10 @@ test.describe("lagis smoke test", () => {
     // Check for "Karte" text
     await expect(page.locator("text=Karte")).toBeVisible();
 
+    // Add query param
+
     // Logout
-    await page.click(".logout");
+    // await page.click(".logout");
 
     // Verify logout - should see LagIS Desktop
     // await expect(page.locator('text=LagIS Desktop')).toBeVisible();

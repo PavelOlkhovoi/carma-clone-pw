@@ -1,6 +1,6 @@
 name: Check PR
 run-name: >
-  🔍 PR checks: ${{ github.event.pull_request.title }}
+  🔍 PR checks: ${{ github.event.pull_request.head.commit.message}}
 on:
   pull_request:
     branches:

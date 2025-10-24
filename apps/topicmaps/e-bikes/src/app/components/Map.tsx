@@ -72,13 +72,13 @@ const Map = () => {
   return (
     <div className={TAILWIND_CLASSNAMES_FULLSCREEN_FIXED}>
       <ControlLayout ifStorybook={false}>
-        <Control position="topleft" order={10}>
+        {/* <Control position="topleft" order={10}>
           <ZoomControl />
         </Control>
 
         <Control position="topleft" order={50}>
           <FullscreenControl />
-        </Control>
+        </Control> */}
         <Control position="topleft" order={60} title="Mein Standort">
           <RoutedMapLocateControl
             tourRefLabels={null}

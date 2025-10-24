@@ -101,7 +101,6 @@ const Map = () => {
                 "schulen",
               ]}
               typeInference={defaultTypeInference}
-              // onSelection={()=> {}}
               pixelwidth={
                 responsiveState === "normal" ? "300px" : windowSize.width - gap
               }

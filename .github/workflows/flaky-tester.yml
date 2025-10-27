@@ -54,5 +54,5 @@ jobs:
         if: steps.e2e-manual-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
-      - name: Run E2E tests (all tests)
+      - name: Run E2E test ${{ github.event.inputs['project-name'] }}/${{ github.event.inputs['test-name'] }}/${{ github.event.inputs['repetitions-number'] }}
         run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep=${{ github.event.inputs['test-name'] }} --repeat-each=${{ github.event.inputs['repetitions-number'] }} --skip-nx-cache --skipInstall --parallel=1

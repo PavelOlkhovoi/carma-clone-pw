@@ -1001,7 +1001,78 @@ test.describe("lagis smoke test", () => {
       }
     }
 
-    // Add query param
+    // Test: Click Barmen in first dropdown and check second dropdown
+    console.log('🎯 Testing first dropdown interaction...');
+    
+    // Wait for LandParcelChooser to be ready
+    await page.waitForTimeout(1000);
+    
+    // Find the first select element (should be Gemarkung)
+    const firstSelect = page.locator('.ant-select').first();
+    await expect(firstSelect).toBeVisible();
+    console.log('✅ First select element is visible');
+    
+    // Click to open the first dropdown
+    await firstSelect.click();
+    console.log('🔍 Clicked first dropdown');
+    
+    // Wait for dropdown options to appear
+    await page.waitForTimeout(500);
+    
+    // Look for "Barmen" option in the dropdown
+    const barmenOption = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: 'Barmen' });
+    const barmenExists = await barmenOption.count() > 0;
+    console.log('🔍 Barmen option exists:', barmenExists);
+    
+    if (barmenExists) {
+      // Click on Barmen
+      await barmenOption.click();
+      console.log('✅ Clicked Barmen option');
+      
+      // Wait for the selection to process
+      await page.waitForTimeout(1000);
+      
+      // Now check what's in the second dropdown
+      const secondSelect = page.locator('.ant-select').nth(1);
+      const secondSelectExists = await secondSelect.count() > 0;
+      console.log('🔍 Second select exists:', secondSelectExists);
+      
+      if (secondSelectExists) {
+        // Click the second dropdown to see its options
+        await secondSelect.click();
+        console.log('🔍 Clicked second dropdown');
+        
+        // Wait for options to appear
+        await page.waitForTimeout(500);
+        
+        // Get all options in the second dropdown
+        const secondDropdownItems = page.locator('.ant-select-dropdown .ant-select-item');
+        const itemCount = await secondDropdownItems.count();
+        console.log(`🔍 Second dropdown has ${itemCount} options:`);
+        
+        // Log each option
+        for (let i = 0; i < Math.min(itemCount, 10); i++) {
+          const item = secondDropdownItems.nth(i);
+          const text = await item.textContent();
+          console.log(`   Option ${i}: "${text}"`);
+        }
+      } else {
+        console.log('❌ Second select element not found');
+      }
+    } else {
+      console.log('❌ Barmen option not found in first dropdown');
+      
+      // Debug: Show what options are actually available
+      const allOptions = page.locator('.ant-select-dropdown .ant-select-item');
+      const optionCount = await allOptions.count();
+      console.log(`🔍 First dropdown has ${optionCount} options:`);
+      
+      for (let i = 0; i < Math.min(optionCount, 5); i++) {
+        const item = allOptions.nth(i);
+        const text = await item.textContent();
+        console.log(`   Option ${i}: "${text}"`);
+      }
+    }
 
     // Logout
     // await page.click(".logout");

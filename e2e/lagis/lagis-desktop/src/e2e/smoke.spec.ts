@@ -1056,6 +1056,50 @@ test.describe("lagis smoke test", () => {
           const text = await item.textContent();
           console.log(`   Option ${i}: "${text}"`);
         }
+        
+        // Look for "3" option in the second dropdown
+        const option3 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '3' });
+        const option3Exists = await option3.count() > 0;
+        console.log('🔍 Option "3" exists in second dropdown:', option3Exists);
+        
+        if (option3Exists) {
+          // Click on "3"
+          await option3.click();
+          console.log('✅ Clicked "3" option in second dropdown');
+          
+          // Wait for the selection to process
+          await page.waitForTimeout(1000);
+          
+          // Now check what's in the third dropdown
+          const thirdSelect = page.locator('.ant-select').nth(2);
+          const thirdSelectExists = await thirdSelect.count() > 0;
+          console.log('🔍 Third select exists:', thirdSelectExists);
+          
+          if (thirdSelectExists) {
+            // Click the third dropdown to see its options
+            await thirdSelect.click();
+            console.log('🔍 Clicked third dropdown');
+            
+            // Wait for options to appear
+            await page.waitForTimeout(500);
+            
+            // Get all options in the third dropdown
+            const thirdDropdownItems = page.locator('.ant-select-dropdown .ant-select-item');
+            const thirdItemCount = await thirdDropdownItems.count();
+            console.log(`🔍 Third dropdown has ${thirdItemCount} options:`);
+            
+            // Log each option in the third dropdown
+            for (let i = 0; i < Math.min(thirdItemCount, 10); i++) {
+              const item = thirdDropdownItems.nth(i);
+              const text = await item.textContent();
+              console.log(`   Option ${i}: "${text}"`);
+            }
+          } else {
+            console.log('❌ Third select element not found');
+          }
+        } else {
+          console.log('❌ Option "3" not found in second dropdown');
+        }
       } else {
         console.log('❌ Second select element not found');
       }

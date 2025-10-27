@@ -1076,6 +1076,22 @@ test.describe("lagis smoke test", () => {
               const containerText =
                 await verwaltungsbereicheContainer.textContent();
               expect(containerText).toContain("2");
+              const link = await page.getByRole("link", {
+                name: "Verwaltungsbereiche",
+              });
+              await link.click();
+
+              await page.waitForTimeout(1000);
+              const officesTitle = page.locator("text=Dienststellen");
+              await expect(officesTitle).toBeVisible();
+
+              // Check one office
+              const officeName = page
+                .getByRole("row", { name: "GMW." })
+                .locator("div");
+              await expect(officeName).toBeVisible();
+              const officeArea = page.getByRole("cell", { name: "7719" });
+              await expect(officeArea).toBeVisible();
             }
           }
         }

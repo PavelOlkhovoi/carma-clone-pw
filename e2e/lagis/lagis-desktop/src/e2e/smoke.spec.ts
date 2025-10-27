@@ -3,7 +3,7 @@ import { setupAllMocks, mockOMTMapHosting } from "@carma-commons/e2e";
 import { responseWithTwoOffices, gemarkung } from "../fixtures/mock-responses";
 
 test.describe("lagis smoke test", () => {
-  test("main page show map, menu, cards, combo boxes after authorisation", async ({
+  test("main page show map, menu, combo boxes and selected offices after authorization", async ({
     page,
     context,
   }) => {

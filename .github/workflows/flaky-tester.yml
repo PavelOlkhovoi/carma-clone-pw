@@ -19,6 +19,7 @@ on:
 
 jobs:
   e2e:
+    name: "E2E Test: ${{ github.event.inputs['project-name'] }}/${{ github.event.inputs['test-name'] }} ${{ github.event.inputs['repetitions-number'] }} times"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository

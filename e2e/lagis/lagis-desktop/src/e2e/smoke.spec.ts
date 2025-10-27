@@ -1094,6 +1094,72 @@ test.describe("lagis smoke test", () => {
               const text = await item.textContent();
               console.log(`   Option ${i}: "${text}"`);
             }
+            
+            // Look for "39-0" or similar option in the third dropdown
+            let option39 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '39-0' });
+            let option39Exists = await option39.count() > 0;
+            console.log('🔍 Option "39-0" exists in third dropdown:', option39Exists);
+            
+            // If "39-0" not found, try "39/0" format
+            if (!option39Exists) {
+              option39 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '39/0' });
+              option39Exists = await option39.count() > 0;
+              console.log('🔍 Option "39/0" exists in third dropdown:', option39Exists);
+            }
+            
+            // If still not found, try just "39"
+            if (!option39Exists) {
+              option39 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '39' });
+              option39Exists = await option39.count() > 0;
+              console.log('🔍 Option "39" exists in third dropdown:', option39Exists);
+            }
+            
+            // If still not found, try the first option
+            if (!option39Exists) {
+              option39 = page.locator('.ant-select-dropdown .ant-select-item').first();
+              option39Exists = await option39.count() > 0;
+              console.log('🔍 Using first available option in third dropdown:', option39Exists);
+            }
+            
+            if (option39Exists) {
+              const optionText = await option39.textContent();
+              console.log('🔍 About to click option:', optionText);
+              // Click on the found option
+              await option39.click();
+              console.log(`✅ Clicked "${optionText}" option in third dropdown`);
+              
+              // Wait for the selection to process and URL to update
+              await page.waitForTimeout(1000);
+              
+              // Check the current URL and its parameters
+              const currentUrl = page.url();
+              console.log('🔍 Current URL:', currentUrl);
+              
+              // Check if URL contains the expected parameters
+              const hasGemBarmen = currentUrl.includes('gem=Barmen');
+              const hasFlur3 = currentUrl.includes('flur=3');
+              const hasFstck39 = currentUrl.includes('fstck=39-0');
+              
+              console.log('🔍 URL parameter checks:');
+              console.log(`   gem=Barmen: ${hasGemBarmen}`);
+              console.log(`   flur=3: ${hasFlur3}`);
+              console.log(`   fstck=39-0: ${hasFstck39}`);
+              
+              if (hasGemBarmen && hasFlur3 && hasFstck39) {
+                console.log('✅ All URL parameters are correct: ?gem=Barmen&flur=3&fstck=39-0');
+              } else {
+                console.log('❌ URL parameters are not as expected');
+              }
+              
+              // Extract just the query parameters for cleaner display
+              const urlObj = new URL(currentUrl);
+              const searchParams = urlObj.search;
+              console.log('🔍 Query parameters:', searchParams);
+              
+            } else {
+              console.log('❌ Option "39-0" not found in third dropdown');
+              console.log('🔍 Available options were listed above');
+            }
           } else {
             console.log('❌ Third select element not found');
           }

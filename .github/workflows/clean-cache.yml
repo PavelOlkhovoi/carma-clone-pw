@@ -1,9 +1,9 @@
 name: Cache Cleanup
 run-name: >
-  ⏰ Cache Cleanup & Install
+  ⏰ : Cache Cleanup & Install
 on:
   schedule:
-    - cron: "30 14 * * *"
+    - cron: "30 04 * * *"
 
 jobs:
   clean:

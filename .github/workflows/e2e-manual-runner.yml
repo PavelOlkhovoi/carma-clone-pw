@@ -1,5 +1,6 @@
-name: 🙏 Manual E2E Runner
-
+name: Manual E2E Runner
+run-name: >
+  🙌 : Manual E2E Runner
 on:
   workflow_dispatch:
     inputs:

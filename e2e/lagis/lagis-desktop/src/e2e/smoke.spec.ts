@@ -881,9 +881,11 @@ test.describe("lagis smoke test", () => {
       (route) => {
         const requestBody = route.request().postDataJSON();
 
+        console.log("xxx requestBody", requestBody);
+
         // Check if it's a flurstuecke query FIRST (since it also contains "gemarkung")
         if (requestBody.query.includes("view_flurstueck_schluessel")) {
-          console.log('🎯 Handling flurstuecke query with multiple parcels');
+          console.log("🎯 Handling flurstuecke query with multiple parcels");
           return route.fulfill({
             status: 200,
             contentType: "application/json",
@@ -894,39 +896,53 @@ test.describe("lagis smoke test", () => {
                     alkis_id: "053001-003-00039",
                     schluessel_id: 2197,
                     flurstueckart: "städtisch",
-                    historisch: false
+                    historisch: false,
                   },
                   {
                     alkis_id: "053001-003-00040",
                     schluessel_id: 2198,
                     flurstueckart: "städtisch",
-                    historisch: false
+                    historisch: false,
                   },
                   {
                     alkis_id: "053001-003-00041",
                     schluessel_id: 2199,
                     flurstueckart: "städtisch",
-                    historisch: false
-                  }
+                    historisch: false,
+                  },
                 ],
                 gemarkung: [
                   {
                     schluessel: 3001,
-                    bezeichnung: "Barmen"
+                    bezeichnung: "Barmen",
                   },
                   {
                     schluessel: 3271,
-                    bezeichnung: "Haan"
-                  }
-                ]
+                    bezeichnung: "Haan",
+                  },
+                ],
               },
             }),
           });
         }
 
-        // Check if it's a gemarkung-only query
-        if (requestBody.query.includes("gemarkung")) {
-          console.log('🎯 Handling gemarkung-only query');
+        // Check if it's the detailed flurstueck query (with variables) FIRST
+        if (requestBody.query.includes("extended_alkis_flurstueck") && 
+            requestBody.variables && 
+            (requestBody.variables.alkis_id || requestBody.variables.schluessel_id)) {
+          console.log('🎯 Handling detailed flurstueck query - returning responseWithTwoOffices');
+          console.log('Variables:', requestBody.variables);
+          return route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify(responseWithTwoOffices),
+          });
+        }
+
+        // Check if it's a gemarkung-only query (without variables)
+        if (requestBody.query.includes("gemarkung") && 
+            (!requestBody.variables || Object.keys(requestBody.variables).length === 0)) {
+          console.log("🎯 Handling gemarkung-only query");
           return route.fulfill({
             status: 200,
             contentType: "application/json",
@@ -934,11 +950,11 @@ test.describe("lagis smoke test", () => {
           });
         }
 
-        // Default fallback
+        // Default fallback for other queries
         return route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(responseWithTwoOffices),
+          body: JSON.stringify({ data: {} }),
         });
       }
     );
@@ -967,216 +983,304 @@ test.describe("lagis smoke test", () => {
     await expect(page.locator("text=Karte")).toBeVisible();
 
     // Debug: Check if LandParcelChooser is now visible
-    console.log('🔍 Checking for LandParcelChooser after authentication...');
-    
+    console.log("🔍 Checking for LandParcelChooser after authentication...");
+
     // Wait a bit more for data to load
     await page.waitForTimeout(2000);
-    
-    const selectElements = page.locator('.ant-select');
+
+    const selectElements = page.locator(".ant-select");
     const selectCount = await selectElements.count();
-    console.log('🔍 Found .ant-select elements:', selectCount);
-    
+    console.log("🔍 Found .ant-select elements:", selectCount);
+
     if (selectCount > 0) {
       for (let i = 0; i < selectCount; i++) {
         const element = selectElements.nth(i);
         const isVisible = await element.isVisible();
         const boundingBox = await element.boundingBox();
-        const innerHTML = await element.innerHTML().catch(() => 'Error getting innerHTML');
-        console.log(`   Select ${i}: visible=${isVisible}, boundingBox=${JSON.stringify(boundingBox)}`);
+        const innerHTML = await element
+          .innerHTML()
+          .catch(() => "Error getting innerHTML");
+        console.log(
+          `   Select ${i}: visible=${isVisible}, boundingBox=${JSON.stringify(
+            boundingBox
+          )}`
+        );
         console.log(`   Content: ${innerHTML.substring(0, 100)}...`);
       }
     }
-    
+
     // Check specifically for LandParcelChooser in the header
-    const headerArea = page.locator('.h-\\[32px\\]');
-    const headerExists = await headerArea.count() > 0;
-    console.log('🔍 Header area exists:', headerExists);
-    
+    const headerArea = page.locator(".h-\\[32px\\]");
+    const headerExists = (await headerArea.count()) > 0;
+    console.log("🔍 Header area exists:", headerExists);
+
     if (headerExists) {
-      const headerHTML = await headerArea.innerHTML().catch(() => 'Error getting innerHTML');
-      const hasSelect = headerHTML.includes('ant-select');
-      console.log('🔍 Header contains ant-select:', hasSelect);
+      const headerHTML = await headerArea
+        .innerHTML()
+        .catch(() => "Error getting innerHTML");
+      const hasSelect = headerHTML.includes("ant-select");
+      console.log("🔍 Header contains ant-select:", hasSelect);
       if (hasSelect) {
-        console.log('✅ LandParcelChooser should be visible in header!');
+        console.log("✅ LandParcelChooser should be visible in header!");
       }
     }
 
     // Test: Click Barmen in first dropdown and check second dropdown
-    console.log('🎯 Testing first dropdown interaction...');
-    
+    console.log("🎯 Testing first dropdown interaction...");
+
     // Wait for LandParcelChooser to be ready
     await page.waitForTimeout(1000);
-    
+
     // Find the first select element (should be Gemarkung)
-    const firstSelect = page.locator('.ant-select').first();
+    const firstSelect = page.locator(".ant-select").first();
     await expect(firstSelect).toBeVisible();
-    console.log('✅ First select element is visible');
-    
+    console.log("✅ First select element is visible");
+
     // Click to open the first dropdown
     await firstSelect.click();
-    console.log('🔍 Clicked first dropdown');
-    
+    console.log("🔍 Clicked first dropdown");
+
     // Wait for dropdown options to appear
     await page.waitForTimeout(500);
-    
+
     // Look for "Barmen" option in the dropdown
-    const barmenOption = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: 'Barmen' });
-    const barmenExists = await barmenOption.count() > 0;
-    console.log('🔍 Barmen option exists:', barmenExists);
-    
+    const barmenOption = page
+      .locator(".ant-select-dropdown .ant-select-item")
+      .filter({ hasText: "Barmen" });
+    const barmenExists = (await barmenOption.count()) > 0;
+    console.log("🔍 Barmen option exists:", barmenExists);
+
     if (barmenExists) {
       // Click on Barmen
       await barmenOption.click();
-      console.log('✅ Clicked Barmen option');
-      
+      console.log("✅ Clicked Barmen option");
+
       // Wait for the selection to process
       await page.waitForTimeout(1000);
-      
+
       // Now check what's in the second dropdown
-      const secondSelect = page.locator('.ant-select').nth(1);
-      const secondSelectExists = await secondSelect.count() > 0;
-      console.log('🔍 Second select exists:', secondSelectExists);
-      
+      const secondSelect = page.locator(".ant-select").nth(1);
+      const secondSelectExists = (await secondSelect.count()) > 0;
+      console.log("🔍 Second select exists:", secondSelectExists);
+
       if (secondSelectExists) {
         // Click the second dropdown to see its options
         await secondSelect.click();
-        console.log('🔍 Clicked second dropdown');
-        
+        console.log("🔍 Clicked second dropdown");
+
         // Wait for options to appear
         await page.waitForTimeout(500);
-        
+
         // Get all options in the second dropdown
-        const secondDropdownItems = page.locator('.ant-select-dropdown .ant-select-item');
+        const secondDropdownItems = page.locator(
+          ".ant-select-dropdown .ant-select-item"
+        );
         const itemCount = await secondDropdownItems.count();
         console.log(`🔍 Second dropdown has ${itemCount} options:`);
-        
+
         // Log each option
         for (let i = 0; i < Math.min(itemCount, 10); i++) {
           const item = secondDropdownItems.nth(i);
           const text = await item.textContent();
           console.log(`   Option ${i}: "${text}"`);
         }
-        
+
         // Look for "3" option in the second dropdown
-        const option3 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '3' });
-        const option3Exists = await option3.count() > 0;
+        const option3 = page
+          .locator(".ant-select-dropdown .ant-select-item")
+          .filter({ hasText: "3" });
+        const option3Exists = (await option3.count()) > 0;
         console.log('🔍 Option "3" exists in second dropdown:', option3Exists);
-        
+
         if (option3Exists) {
           // Click on "3"
           await option3.click();
           console.log('✅ Clicked "3" option in second dropdown');
-          
+
           // Wait for the selection to process
           await page.waitForTimeout(1000);
-          
+
           // Now check what's in the third dropdown
-          const thirdSelect = page.locator('.ant-select').nth(2);
-          const thirdSelectExists = await thirdSelect.count() > 0;
-          console.log('🔍 Third select exists:', thirdSelectExists);
-          
+          const thirdSelect = page.locator(".ant-select").nth(2);
+          const thirdSelectExists = (await thirdSelect.count()) > 0;
+          console.log("🔍 Third select exists:", thirdSelectExists);
+
           if (thirdSelectExists) {
             // Click the third dropdown to see its options
             await thirdSelect.click();
-            console.log('🔍 Clicked third dropdown');
-            
+            console.log("🔍 Clicked third dropdown");
+
             // Wait for options to appear
             await page.waitForTimeout(500);
-            
+
             // Get all options in the third dropdown
-            const thirdDropdownItems = page.locator('.ant-select-dropdown .ant-select-item');
+            const thirdDropdownItems = page.locator(
+              ".ant-select-dropdown .ant-select-item"
+            );
             const thirdItemCount = await thirdDropdownItems.count();
             console.log(`🔍 Third dropdown has ${thirdItemCount} options:`);
-            
+
             // Log each option in the third dropdown
             for (let i = 0; i < Math.min(thirdItemCount, 10); i++) {
               const item = thirdDropdownItems.nth(i);
               const text = await item.textContent();
               console.log(`   Option ${i}: "${text}"`);
             }
-            
+
             // Look for "39-0" or similar option in the third dropdown
-            let option39 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '39-0' });
-            let option39Exists = await option39.count() > 0;
-            console.log('🔍 Option "39-0" exists in third dropdown:', option39Exists);
-            
+            let option39 = page
+              .locator(".ant-select-dropdown .ant-select-item")
+              .filter({ hasText: "39-0" });
+            let option39Exists = (await option39.count()) > 0;
+            console.log(
+              '🔍 Option "39-0" exists in third dropdown:',
+              option39Exists
+            );
+
             // If "39-0" not found, try "39/0" format
             if (!option39Exists) {
-              option39 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '39/0' });
-              option39Exists = await option39.count() > 0;
-              console.log('🔍 Option "39/0" exists in third dropdown:', option39Exists);
+              option39 = page
+                .locator(".ant-select-dropdown .ant-select-item")
+                .filter({ hasText: "39/0" });
+              option39Exists = (await option39.count()) > 0;
+              console.log(
+                '🔍 Option "39/0" exists in third dropdown:',
+                option39Exists
+              );
             }
-            
+
             // If still not found, try just "39"
             if (!option39Exists) {
-              option39 = page.locator('.ant-select-dropdown .ant-select-item').filter({ hasText: '39' });
-              option39Exists = await option39.count() > 0;
-              console.log('🔍 Option "39" exists in third dropdown:', option39Exists);
+              option39 = page
+                .locator(".ant-select-dropdown .ant-select-item")
+                .filter({ hasText: "39" });
+              option39Exists = (await option39.count()) > 0;
+              console.log(
+                '🔍 Option "39" exists in third dropdown:',
+                option39Exists
+              );
             }
-            
+
             // If still not found, try the first option
             if (!option39Exists) {
-              option39 = page.locator('.ant-select-dropdown .ant-select-item').first();
-              option39Exists = await option39.count() > 0;
-              console.log('🔍 Using first available option in third dropdown:', option39Exists);
+              option39 = page
+                .locator(".ant-select-dropdown .ant-select-item")
+                .first();
+              option39Exists = (await option39.count()) > 0;
+              console.log(
+                "🔍 Using first available option in third dropdown:",
+                option39Exists
+              );
             }
-            
+
             if (option39Exists) {
               const optionText = await option39.textContent();
-              console.log('🔍 About to click option:', optionText);
+              console.log("🔍 About to click option:", optionText);
               // Click on the found option
               await option39.click();
-              console.log(`✅ Clicked "${optionText}" option in third dropdown`);
-              
+              console.log(
+                `✅ Clicked "${optionText}" option in third dropdown`
+              );
+
               // Wait for the selection to process and URL to update
               await page.waitForTimeout(1000);
-              
+
               // Check the current URL and its parameters
               const currentUrl = page.url();
-              console.log('🔍 Current URL:', currentUrl);
-              
+              console.log("🔍 Current URL:", currentUrl);
+
               // Check if URL contains the expected parameters
-              const hasGemBarmen = currentUrl.includes('gem=Barmen');
-              const hasFlur3 = currentUrl.includes('flur=3');
-              const hasFstck39 = currentUrl.includes('fstck=39-0');
-              
-              console.log('🔍 URL parameter checks:');
+              const hasGemBarmen = currentUrl.includes("gem=Barmen");
+              const hasFlur3 = currentUrl.includes("flur=3");
+              const hasFstck39 = currentUrl.includes("fstck=39-0");
+
+              console.log("🔍 URL parameter checks:");
               console.log(`   gem=Barmen: ${hasGemBarmen}`);
               console.log(`   flur=3: ${hasFlur3}`);
               console.log(`   fstck=39-0: ${hasFstck39}`);
-              
+
               if (hasGemBarmen && hasFlur3 && hasFstck39) {
-                console.log('✅ All URL parameters are correct: ?gem=Barmen&flur=3&fstck=39-0');
+                console.log(
+                  "✅ All URL parameters are correct: ?gem=Barmen&flur=3&fstck=39-0"
+                );
               } else {
-                console.log('❌ URL parameters are not as expected');
+                console.log("❌ URL parameters are not as expected");
               }
-              
+
               // Extract just the query parameters for cleaner display
               const urlObj = new URL(currentUrl);
               const searchParams = urlObj.search;
-              console.log('🔍 Query parameters:', searchParams);
+              console.log("🔍 Query parameters:", searchParams);
               
+              // Check for Verwaltungsbereiche section with 2 items
+              console.log("🔍 Checking for Verwaltungsbereiche section...");
+              await page.waitForTimeout(1000);
+              
+              // Look for Verwaltungsbereiche text
+              const verwaltungsbereicheText = page.locator('text=Verwaltungsbereiche');
+              const verwaltungsbereicheExists = await verwaltungsbereicheText.count() > 0;
+              console.log("🔍 Verwaltungsbereiche section exists:", verwaltungsbereicheExists);
+              
+              if (verwaltungsbereicheExists) {
+                // Look for the number "2" near Verwaltungsbereiche
+                const verwaltungsbereicheContainer = page.locator('text=Verwaltungsbereiche').locator('..');
+                const containerText = await verwaltungsbereicheContainer.textContent();
+                console.log("🔍 Verwaltungsbereiche container text:", containerText);
+                
+                // Check if it contains "2"
+                const hasTwo = containerText && containerText.includes('2');
+                console.log("🔍 Verwaltungsbereiche shows '2' items:", hasTwo);
+                
+                if (hasTwo) {
+                  console.log("✅ Verwaltungsbereiche correctly shows 2 items");
+                } else {
+                  console.log("❌ Verwaltungsbereiche does not show 2 items");
+                  
+                  // Try alternative selectors
+                  const numberBadges = page.locator('.ant-badge-count, [class*="badge"], [class*="count"]');
+                  const badgeCount = await numberBadges.count();
+                  console.log(`🔍 Found ${badgeCount} potential number badges`);
+                  
+                  for (let i = 0; i < Math.min(badgeCount, 3); i++) {
+                    const badge = numberBadges.nth(i);
+                    const badgeText = await badge.textContent();
+                    console.log(`   Badge ${i}: "${badgeText}"`);
+                  }
+                }
+              } else {
+                console.log("❌ Verwaltungsbereiche section not found");
+                
+                // Debug: Look for similar text patterns
+                const sidebarElements = page.locator('[class*="sidebar"], [class*="menu"], [class*="nav"]');
+                const sidebarCount = await sidebarElements.count();
+                console.log(`🔍 Found ${sidebarCount} potential sidebar elements`);
+                
+                if (sidebarCount > 0) {
+                  const sidebarText = await sidebarElements.first().textContent();
+                  console.log("🔍 First sidebar content:", sidebarText?.substring(0, 200) + "...");
+                }
+              }
             } else {
               console.log('❌ Option "39-0" not found in third dropdown');
-              console.log('🔍 Available options were listed above');
+              console.log("🔍 Available options were listed above");
             }
           } else {
-            console.log('❌ Third select element not found');
+            console.log("❌ Third select element not found");
           }
         } else {
           console.log('❌ Option "3" not found in second dropdown');
         }
       } else {
-        console.log('❌ Second select element not found');
+        console.log("❌ Second select element not found");
       }
     } else {
-      console.log('❌ Barmen option not found in first dropdown');
-      
+      console.log("❌ Barmen option not found in first dropdown");
+
       // Debug: Show what options are actually available
-      const allOptions = page.locator('.ant-select-dropdown .ant-select-item');
+      const allOptions = page.locator(".ant-select-dropdown .ant-select-item");
       const optionCount = await allOptions.count();
       console.log(`🔍 First dropdown has ${optionCount} options:`);
-      
+
       for (let i = 0; i < Math.min(optionCount, 5); i++) {
         const item = allOptions.nth(i);
         const text = await item.textContent();

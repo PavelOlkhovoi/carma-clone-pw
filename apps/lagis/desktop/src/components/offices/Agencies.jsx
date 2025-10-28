@@ -232,7 +232,7 @@ const Agencies = ({
         onCancel={handleCancel}
         wrapClassName="history-modal-wrapper"
         okButtonProps={{ style: { display: "none" } }}
-        bodyStyle={{ backgroundColor: "#f1f1f1" }}
+        // bodyStyle={{ backgroundColor: "#f1f1f1" }}
         cancelText="Schließen"
         centered
       >

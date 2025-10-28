@@ -312,6 +312,13 @@ jobs:
       - name: Run E2E tests
         run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
 
+      - name: Report smoke test failure
+        if: failure()
+        run: |
+          echo "## ❌ Smoke Test Failed" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
+          echo "See workflow logs for details." >> $GITHUB_STEP_SUMMARY
+
       - name: Cancel workflow on smoke test failure
         if: failure()
         uses: actions/github-script@v7

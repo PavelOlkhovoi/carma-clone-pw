@@ -317,39 +317,9 @@ jobs:
         run: |
           echo "❌ Smoke Test ${{ matrix.project }} Failed"  >> $GITHUB_STEP_SUMMARY
 
-      - name: Cancel workflow on smoke test failure
+      - name: Fail workflow on smoke test failure
         if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const run_id = process.env.GITHUB_RUN_ID;
-            await github.rest.actions.cancelWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id,
-            });
-            core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)
-
-  # Status check that will show red cross icon when cancelled
-  check-failure:
-    name: "❌ : check failure"
-    runs-on: ubuntu-latest
-    needs: [determine_projects, build, smokeTest]
-    if: always()
-    steps:
-      - name: Check workflow status
         run: |
-          # This job will show red cross icon when any job is cancelled or failed
-          if [[ "${{ needs.determine_projects.result }}" == "cancelled" ]] || 
-             [[ "${{ needs.build.result }}" == "cancelled" ]] || 
-             [[ "${{ needs.smokeTest.result }}" == "cancelled" ]]; then
-            echo "::error::Workflow was cancelled"
-            exit 1
-          elif [[ "${{ needs.determine_projects.result }}" == "failure" ]] || 
-               [[ "${{ needs.build.result }}" == "failure" ]] || 
-               [[ "${{ needs.smokeTest.result }}" == "failure" ]]; then
-            echo "::error::Workflow failed"
-            exit 1
-          else
-            echo "All checks passed"
-          fi
+          echo "::error title=❌ Smoke Test Failed::Smoke test for ${{ matrix.project }} failed"
+          echo "❌ Smoke Test ${{ matrix.project }} Failed - Stopping workflow" >> $GITHUB_STEP_SUMMARY
+          exit 1

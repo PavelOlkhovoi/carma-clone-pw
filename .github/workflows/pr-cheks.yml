@@ -317,7 +317,6 @@ jobs:
         run: |
           echo "## ❌ Smoke Test Failed" >> $GITHUB_STEP_SUMMARY
           echo "**Project:** ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
-          echo "See workflow logs for details." >> $GITHUB_STEP_SUMMARY
 
       - name: Cancel workflow on smoke test failure
         if: failure()

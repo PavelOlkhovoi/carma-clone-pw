@@ -315,8 +315,7 @@ jobs:
       - name: Report the smoke test failure
         if: failure()
         run: |
-          echo "## ❌ Smoke Test Failed" >> $GITHUB_STEP_SUMMARY
-          echo "**Project:** ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
+          echo "**❌ Smoke Test Failed**" ${{ matrix.project }} >> $GITHUB_STEP_SUMMARY
 
       - name: Cancel workflow on smoke test failure
         if: failure()
@@ -328,6 +327,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               run_id,
-              conclusion: "failure"
             });
             core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)

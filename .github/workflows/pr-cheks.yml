@@ -207,6 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && needs.determine_projects.outputs.project_list != '[]' }}
     strategy:
+      fail-fast: true
       matrix:
         project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
 
@@ -312,14 +313,8 @@ jobs:
       - name: Run E2E tests
         run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
 
-      - name: Report the smoke test failure
+      - name: Stop workflow on smoke test failure
         if: failure()
         run: |
-          echo "❌ Smoke Test ${{ matrix.project }} Failed"  >> $GITHUB_STEP_SUMMARY
-
-      - name: Fail workflow on smoke test failure
-        if: failure()
-        run: |
-          echo "::error title=❌ Smoke Test Failed::Smoke test for ${{ matrix.project }} failed"
-          echo "❌ Smoke Test ${{ matrix.project }} Failed - Stopping workflow" >> $GITHUB_STEP_SUMMARY
+          echo "::error title=❌ Smoke Test Failed::Stopping all jobs"
           exit 1

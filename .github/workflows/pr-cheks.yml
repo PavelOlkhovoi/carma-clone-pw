@@ -207,7 +207,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && needs.determine_projects.outputs.project_list != '[]' }}
     strategy:
-      fail-fast: true
       matrix:
         project: ${{ fromJson(needs.determine_projects.outputs.project_list) }}
 
@@ -315,6 +314,7 @@ jobs:
 
       - name: Stop workflow on smoke test failure
         if: failure()
-        run: |
-          echo "::error title=❌ Smoke Test Failed::Stopping all jobs"
-          exit 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.setFailed(`❌ Smoke test failed - stopping workflow`);

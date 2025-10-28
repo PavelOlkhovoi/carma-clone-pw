@@ -328,5 +328,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               run_id,
+              conclusion: "failure"
             });
             core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)

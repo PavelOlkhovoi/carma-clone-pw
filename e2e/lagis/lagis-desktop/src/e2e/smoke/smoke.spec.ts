@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { setupAllMocks, mockOMTMapHosting } from "@carma-commons/e2e";
-import { responseWithTwoOffices, gemarkung } from "../fixtures/mock-responses";
+import {
+  responseWithTwoOffices,
+  gemarkung,
+} from "../../fixtures/mock-responses";
 
 test.describe("lagis smoke test", () => {
   test("main page show map, menu, combo boxes and selected offices after authorization", async ({

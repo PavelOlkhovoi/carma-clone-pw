@@ -312,20 +312,9 @@ jobs:
       - name: Run E2E tests
         run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
 
-      - name: Report the smoke test failure
-        if: failure()
-        run: |
-          echo "❌ Smoke Test ${{ matrix.project }} Failed"  >> $GITHUB_STEP_SUMMARY
-
-      - name: Cancel workflow on smoke test failure
+      - name: Stop workflow on smoke test failure
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
-            const run_id = process.env.GITHUB_RUN_ID;
-            await github.rest.actions.cancelWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id,
-            });
-            core.info(`Requested cancellation of workflow run ${run_id} due to smoke test failure.`)
+            core.setFailed(`❌ Smoke test failed - stopping workflow`);

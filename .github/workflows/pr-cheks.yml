@@ -318,6 +318,12 @@ jobs:
             echo '```bash'
             echo "npx nx e2e ${{ matrix.project }} --grep=smoke --skip-nx-cache --skipInstall"
             echo '```'
+            echo ""
+            echo "### ⚡ Re-run Only the Last Failed Test"
+            echo ""
+            echo '```bash'
+            echo "npx nx e2e ${{ matrix.project }} --grep=live --skip-nx-cache --skipInstall --last-failed"
+            echo '```'
           } >> $GITHUB_STEP_SUMMARY
 
       - name: Cancel workflow on smoke test failure

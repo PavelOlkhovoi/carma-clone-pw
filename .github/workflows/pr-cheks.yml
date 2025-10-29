@@ -316,14 +316,21 @@ jobs:
           PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall > test_output.log 2>&1
           exit_code=$?
 
-          # Extract failed test names from the output
-          failed_tests=$(grep -E "✘|×|FAIL|Failed" test_output.log | grep -v "test run failed" | head -5 || echo "")
+          # Extract failed test names from the output and clean ANSI codes
+          failed_tests=$(grep -E "✘|×|FAIL|Failed" test_output.log | grep -v "test run failed" | sed 's/\x1b\[[0-9;]*m//g' | head -5 || echo "")
+          
+          # Debug: Show what we captured
+          echo "DEBUG: Raw failed tests output:"
+          echo "$failed_tests"
+          echo "DEBUG: End of failed tests output"
 
           # Save failed tests to environment for next step
           if [ ! -z "$failed_tests" ]; then
             echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
             echo "$failed_tests" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
+          else
+            echo "FAILED_TESTS=No specific test failures detected" >> $GITHUB_ENV
           fi
 
           # Display the full output
@@ -337,7 +344,17 @@ jobs:
         run: |
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
-            echo "Failed Tests: ${{ env.FAILED_TESTS }}"
+            echo ""
+            if [ ! -z "$FAILED_TESTS" ] && [ "$FAILED_TESTS" != "No specific test failures detected" ]; then
+              echo "### 🚨 Failed Tests:"
+              echo '```'
+              echo "$FAILED_TESTS"
+              echo '```'
+              echo ""
+            else
+              echo "### ⚠️ Test failure detected but specific test names could not be extracted"
+              echo ""
+            fi
             echo "### 🔁 Run Locally via Command"
             echo ""
             echo '```bash'

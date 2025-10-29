@@ -337,14 +337,7 @@ jobs:
         run: |
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
-            echo ""
-            if [ ! -z "$FAILED_TESTS" ]; then
-              echo "### 🚨 Failed Tests:"
-              echo '```'
-              echo "$FAILED_TESTS"
-              echo '```'
-              echo ""
-            fi
+            echo "Failed Tests: ${{ env.FAILED_TESTS }}"
             echo "### 🔁 Run Locally via Command"
             echo ""
             echo '```bash'

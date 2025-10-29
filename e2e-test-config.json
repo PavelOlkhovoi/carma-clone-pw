@@ -41,12 +41,12 @@
       "live": true
     },
     "potenzialflaechen-online": {
-      "smoke": false,
+      "smoke": true,
       "live": true
     },
     "verkehrszeichenkataster": {
-      "smoke": false,
-      "live": false
+      "smoke": true,
+      "live": true
     },
     "lagis-desktop": {
       "smoke": true,

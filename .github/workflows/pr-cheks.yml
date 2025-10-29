@@ -288,20 +288,15 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-      - name: Generate node_modules cache key
-        id: node-cache-key
-        run: |
-          echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
-
       - name: Restore node_modules from cache
-        id: e2e-manual-node-cache
+        id: smoke-test-node-cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ steps.node-cache-key.outputs.key }}
+          key: ${{ needs.determine_projects.outputs.node-modules-cache-key }}
 
       - name: Install dependencies
-        if: steps.e2e-manual-node-cache.outputs.cache-hit != 'true'
+        if: steps.smoke-test-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Run E2E tests for project
@@ -310,38 +305,7 @@ jobs:
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
 
       - name: Run E2E tests
-        id: run_e2e_tests
-        run: |
-          set +e  # Don't exit on failure, we want to capture the output
-          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall > test_output.log 2>&1
-          exit_code=$?
-
-          # Extract failed test names from the output and clean ANSI codes
-          failed_tests=$(grep -E "✘|×|FAIL|Failed" test_output.log | grep -v "test run failed" | sed 's/\x1b\[[0-9;]*m//g' | head -5 || echo "")
-
-          # Debug: Show what we captured
-          echo "DEBUG: Raw failed tests output:"
-          echo "$failed_tests"
-          echo "DEBUG: End of failed tests output"
-
-          # Save failed tests to environment for next step
-          if [ ! -z "$failed_tests" ]; then
-            echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
-            echo "$failed_tests" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-          else
-            echo "FAILED_TESTS=No specific test failures detected" >> $GITHUB_ENV
-          fi
-
-          # Display the full output
-          cat test_output.log
-
-          # Exit with the original exit code
-          exit $exit_code
-
-      - name: Set failed tests as environment variable
-        run: |
-          echo "FAILED_TESTS=${{ steps.run_e2e_tests.outputs.failed_tests }}" >> $GITHUB_ENV
+        run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
 
       - name: Report the smoke test failure
         if: failure()
@@ -349,16 +313,6 @@ jobs:
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
             echo ""
-            if [ ! -z "$FAILED_TESTS" ] && [ "$FAILED_TESTS" != "No specific test failures detected" ]; then
-              echo "### 🚨 Failed Tests:"
-              echo '```'
-              echo "$FAILED_TESTS"
-              echo '```'
-              echo ""
-            else
-              echo "### ⚠️ Test failure detected but specific test names could not be extracted"
-              echo ""
-            fi
             echo "### 🔁 Run Locally via Command"
             echo ""
             echo '```bash'

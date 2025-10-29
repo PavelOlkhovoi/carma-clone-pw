@@ -315,10 +315,11 @@ jobs:
       - name: Report the smoke test failure
         if: failure()
         run: |
-          echo "❌ Smoke Test ${{ matrix.project }} Failed" >> $GITHUB_STEP_SUMMARY
           {
+            echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
             echo ""
-            echo "### Use the following command to run the smoke test locally"
+            echo "### 🔁 Run Locally via Command"
+            echo ""
             echo '```bash'
             echo "npx nx e2e ${{ matrix.project }} --grep=smoke --skip-nx-cache --skipInstall"
             echo '```'

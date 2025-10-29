@@ -310,7 +310,27 @@ jobs:
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
 
       - name: Run E2E tests
-        run: PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall
+        id: run_e2e_tests
+        run: |
+          set +e  # Don't exit on failure, we want to capture the output
+          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke" --skip-nx-cache --skipInstall > test_output.log 2>&1
+          exit_code=$?
+
+          # Extract failed test names from the output
+          failed_tests=$(grep -E "✘|×|FAIL|Failed" test_output.log | grep -v "test run failed" | head -5 || echo "")
+
+          # Save failed tests to environment for next step
+          if [ ! -z "$failed_tests" ]; then
+            echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
+            echo "$failed_tests" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+
+          # Display the full output
+          cat test_output.log
+
+          # Exit with the original exit code
+          exit $exit_code
 
       - name: Report the smoke test failure
         if: failure()
@@ -318,6 +338,13 @@ jobs:
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
             echo ""
+            if [ ! -z "$FAILED_TESTS" ]; then
+              echo "### 🚨 Failed Tests:"
+              echo '```'
+              echo "$FAILED_TESTS"
+              echo '```'
+              echo ""
+            fi
             echo "### 🔁 Run Locally via Command"
             echo ""
             echo '```bash'

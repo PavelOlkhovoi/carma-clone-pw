@@ -316,13 +316,13 @@ jobs:
             echo "### 🔁 Run locally via command"
             echo ""
             echo '```bash'
-            echo "npx nx e2e ${{ matrix.project }} --grep=smoke --skip-nx-cache --skipInstall"
+            echo "npx nx e2e ${{ matrix.project }} --grep=smoke/ --skip-nx-cache --skipInstall"
             echo '```'
             echo ""
             echo "### ⚡ Re-run only the last failed"
             echo ""
             echo '```bash'
-            echo "npx nx e2e ${{ matrix.project }} --grep=live --skip-nx-cache --skipInstall --last-failed"
+            echo "npx nx e2e ${{ matrix.project }} --grep=smoke/ --skip-nx-cache --skipInstall --last-failed"
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
 

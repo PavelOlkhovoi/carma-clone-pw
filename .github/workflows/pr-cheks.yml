@@ -316,6 +316,7 @@ jobs:
         if: failure()
         run: |
           echo "❌ Smoke Test ${{ matrix.project }} Failed"  >> $GITHUB_STEP_SUMMARY
+          echo "npx nx e2e ${{ matrix.project }} --grep=smoke --skip-nx-cache --skipInstall"  >> $GITHUB_STEP_SUMMARY
 
       - name: Cancel workflow on smoke test failure
         if: failure()

@@ -318,7 +318,7 @@ jobs:
 
           # Extract failed test names from the output and clean ANSI codes
           failed_tests=$(grep -E "✘|×|FAIL|Failed" test_output.log | grep -v "test run failed" | sed 's/\x1b\[[0-9;]*m//g' | head -5 || echo "")
-          
+
           # Debug: Show what we captured
           echo "DEBUG: Raw failed tests output:"
           echo "$failed_tests"
@@ -338,6 +338,10 @@ jobs:
 
           # Exit with the original exit code
           exit $exit_code
+
+      - name: Set failed tests as environment variable
+        run: |
+          echo "FAILED_TESTS=${{ steps.run_e2e_tests.outputs.failed_tests }}" >> $GITHUB_ENV
 
       - name: Report the smoke test failure
         if: failure()

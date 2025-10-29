@@ -288,20 +288,15 @@ jobs:
           touch .npmrc
           echo "${{ secrets.CISMET_DEV_REGISTRY_SECRET_4_DOT_NPMRC }}" >> .npmrc
 
-      - name: Generate node_modules cache key
-        id: node-cache-key
-        run: |
-          echo "key=node-modules-${{ runner.os }}-node-20-${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
-
       - name: Restore node_modules from cache
-        id: e2e-manual-node-cache
+        id: smoke-test-node-cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ steps.node-cache-key.outputs.key }}
+          key: ${{ needs.determine_projects.outputs.node-modules-cache-key }}
 
       - name: Install dependencies
-        if: steps.e2e-manual-node-cache.outputs.cache-hit != 'true'
+        if: steps.smoke-test-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Run E2E tests for project
@@ -315,7 +310,21 @@ jobs:
       - name: Report the smoke test failure
         if: failure()
         run: |
-          echo "❌ Smoke Test ${{ matrix.project }} Failed"  >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
+            echo ""
+            echo "### 🔁 Run locally via command"
+            echo ""
+            echo '```bash'
+            echo "npx nx e2e ${{ matrix.project }} --grep=smoke --skip-nx-cache --skipInstall"
+            echo '```'
+            echo ""
+            echo "### ⚡ Re-run only the last failed"
+            echo ""
+            echo '```bash'
+            echo "npx nx e2e ${{ matrix.project }} --grep=live --skip-nx-cache --skipInstall --last-failed"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: Cancel workflow on smoke test failure
         if: failure()

@@ -319,7 +319,7 @@ jobs:
             echo "npx nx e2e ${{ matrix.project }} --grep=smoke --skip-nx-cache --skipInstall"
             echo '```'
             echo ""
-            echo "### ⚡ Re-run only the last failed test to execute the last failed test"
+            echo "### ⚡ Re-run only the last failed"
             echo ""
             echo '```bash'
             echo "npx nx e2e ${{ matrix.project }} --grep=live --skip-nx-cache --skipInstall --last-failed"

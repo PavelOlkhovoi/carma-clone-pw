@@ -1,59 +1,59 @@
 {
   "projects": {
     "stadtplan": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "kulturstadtplan": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "geoportal": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "e-auto-ladestation": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "e-bikes": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "kita-finder": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "klimaorte": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "luftmessstationen": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "x-and-ride": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "baederkarte": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "potenzialflaechen-online": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "verkehrszeichenkataster": {
-      "smoke": true,
-      "live": true
+      "smoke": false,
+      "live": false
     },
     "lagis-desktop": {
-      "smoke": true,
+      "smoke": false,
       "live": false
     },
     "verdis-desktop": {
-      "smoke": true,
+      "smoke": false,
       "live": false
     }
   }

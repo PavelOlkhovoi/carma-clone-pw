@@ -1,10 +1,10 @@
-name: Check PR
+name: Check PR with config
 run-name: >
-  🔍 : ${{ github.event.pull_request.title }} - without config
+  🔍 : ${{ github.event.pull_request.title }} - with config
 on:
   pull_request:
     branches:
-      - main
+      - dev
 
 jobs:
   determine_projects:
@@ -142,13 +142,15 @@ jobs:
           # echo "$result_json"
           echo "::set-output name=project_list::$result_json"
           echo "PROJECT_LIST=${result_json}" >> $GITHUB_ENV
-
       - name: Generate E2E project list
         if: steps.list_affected_projects.outputs.project_list != ''
         id: generate_e2e_list
         run: |
           # Get the project list from the matrix setup
           projects='${{ steps.set_up_matrix.outputs.project_list }}'
+
+          # Load e2e-test-config.json
+          e2e_config=$(cat e2e-test-config.json)
 
           # Initialize empty array for E2E projects
           e2e_projects="[]"
@@ -165,16 +167,26 @@ jobs:
               e2e_proj="e2e-$project"
               echo "Checking for E2E project: $e2e_proj"
               
+              # Check if E2E project exists in nx workspace
               if npx nx show project "$e2e_proj" >/dev/null 2>&1; then
-                echo "✅ E2E project '$e2e_proj' found"
-                if [ "$first" = true ]; then
-                  e2e_list="$e2e_list\"$e2e_proj\""
-                  first=false
+                echo "✅ E2E project '$e2e_proj' found in nx workspace"
+                
+                # Check if project exists in e2e-test-config.json and has smoke: true
+                smoke_test=$(echo "$e2e_config" | jq -r --arg project "$project" '.projects[$project].smoke // false')
+                
+                if [ "$smoke_test" = "true" ]; then
+                  echo "✅ Project '$project' has smoke test enabled in e2e-test-config.json"
+                  if [ "$first" = true ]; then
+                    e2e_list="$e2e_list\"$e2e_proj\""
+                    first=false
+                  else
+                    e2e_list="$e2e_list, \"$e2e_proj\""
+                  fi
                 else
-                  e2e_list="$e2e_list, \"$e2e_proj\""
+                  echo "❌ Project '$project' not found in e2e-test-config.json or smoke test disabled"
                 fi
               else
-                echo "❌ E2E project '$e2e_proj' not found"
+                echo "❌ E2E project '$e2e_proj' not found in nx workspace"
               fi
             done
             
@@ -184,6 +196,7 @@ jobs:
 
           echo "::set-output name=e2e_list::$e2e_projects"
           echo "E2E_LIST=$e2e_projects" >> $GITHUB_ENV
+
       - name: Show project list
         run: |
           echo "The project list is |${{ steps.set_up_matrix.outputs.project_list }}|"

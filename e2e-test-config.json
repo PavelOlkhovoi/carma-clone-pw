@@ -49,8 +49,8 @@
       "live": false
     },
     "lagis-desktop": {
-      "smoke": false,
-      "live": false
+      "smoke": true,
+      "live": true
     },
     "verdis-desktop": {
       "smoke": false,

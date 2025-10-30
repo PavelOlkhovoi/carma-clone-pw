@@ -40,8 +40,6 @@ export const daqKeys = [
 ];
 export const db = initTables(appKey, daqKeys);
 
-
-
 function App() {
   let backgroundModes;
   useEffect(() => {
@@ -194,7 +192,6 @@ function App() {
   };
 
   // const baseLayerConf = JSON.parse(JSON.stringify(defaultLayerConf));
-  // TODO problems in settings preview map wehen doing the immutable way
 
   const baseLayerConf = { ...defaultLayerConf };
   if (!baseLayerConf.namedLayers.cismetLight) {

@@ -1,4 +1,4 @@
-name: Deploy with cache
+name: Deploy with config
 
 run-name: >
   ${{ (contains(github.event.head_commit.message, 'skip-deploy')||contains(github.event.head_commit.message, 'no-deploy')) && '💤💤💤 ' ||''}}
@@ -10,7 +10,7 @@ run-name: >
   ${{ (github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator']) && '- 🔢' || '' }}  
   ${{ github.event.inputs['version-manipulator'] || github.event.client_payload['version-manipulator'] }}  
     -
-  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-cache
+  ${{ github.event.inputs.target || github.event.client_payload.target || github.ref_name }}-config
 on:
   workflow_dispatch:
     inputs:
@@ -191,6 +191,9 @@ jobs:
           # Get the project list from the matrix setup
           projects='${{ steps.set_up_matrix.outputs.project_list }}'
 
+          # Load e2e-test-config.json
+          e2e_config=$(cat e2e-test-config.json)
+
           # Initialize empty array for E2E projects
           e2e_projects="[]"
 
@@ -206,16 +209,26 @@ jobs:
               e2e_proj="e2e-$project"
               echo "Checking for E2E project: $e2e_proj"
               
+              # Check if E2E project exists in nx workspace
               if npx nx show project "$e2e_proj" >/dev/null 2>&1; then
-                echo "✅ E2E project '$e2e_proj' found"
-                if [ "$first" = true ]; then
-                  e2e_list="$e2e_list\"$e2e_proj\""
-                  first=false
+                echo "✅ E2E project '$e2e_proj' found in nx workspace"
+                
+                # Check if project exists in e2e-test-config.json and has smoke: true
+                smoke_test=$(echo "$e2e_config" | jq -r --arg project "$project" '.projects[$project].smoke // false')
+                
+                if [ "$smoke_test" = "true" ]; then
+                  echo "✅ Project '$project' has smoke test enabled in e2e-test-config.json"
+                  if [ "$first" = true ]; then
+                    e2e_list="$e2e_list\"$e2e_proj\""
+                    first=false
+                  else
+                    e2e_list="$e2e_list, \"$e2e_proj\""
+                  fi
                 else
-                  e2e_list="$e2e_list, \"$e2e_proj\""
+                  echo "❌ Project '$project' not found in e2e-test-config.json or smoke test disabled"
                 fi
               else
-                echo "❌ E2E project '$e2e_proj' not found"
+                echo "❌ E2E project '$e2e_proj' not found in nx workspace"
               fi
             done
             
@@ -225,6 +238,10 @@ jobs:
 
           echo "::set-output name=e2e_list::$e2e_projects"
           echo "E2E_LIST=$e2e_projects" >> $GITHUB_ENV
+
+      - name: Debug E2E project list
+        run: |
+          echo "The E2E project list is: ${{ steps.generate_e2e_list.outputs.e2e_list }}"
 
       - name: Show project list
         run: |
@@ -809,28 +826,28 @@ jobs:
         if: steps.single-job-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
-      # - name: Check E2E live configuration
-      #   id: check_e2e_live
-      #   run: |
-      #     project_name="${{ github.event.inputs['project-name'] }}"
-      #     echo "Checking E2E live configuration for project: $project_name"
+      - name: Check E2E live configuration
+        id: check_e2e_live
+        run: |
+          project_name="${{ github.event.inputs['project-name'] }}"
+          echo "Checking E2E live configuration for project: $project_name"
 
-      #     # Load e2e-test-config.json
-      #     e2e_config=$(cat e2e-test-config.json)
+          # Load e2e-test-config.json
+          e2e_config=$(cat e2e-test-config.json)
 
-      #     # Check if project exists in e2e-test-config.json and has live: true
-      #     live_test=$(echo "$e2e_config" | jq -r --arg project "$project_name" '.projects[$project].live // false')
+          # Check if project exists in e2e-test-config.json and has live: true
+          live_test=$(echo "$e2e_config" | jq -r --arg project "$project_name" '.projects[$project].live // false')
 
-      #     if [ "$live_test" = "true" ]; then
-      #       echo "✅ Project '$project_name' has live test enabled"
-      #       echo "should_run_e2e=true" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "❌ Project '$project_name' not found in e2e-test-config.json or live test disabled"
-      #       echo "should_run_e2e=false" >> $GITHUB_OUTPUT
-      #     fi
+          if [ "$live_test" = "true" ]; then
+            echo "✅ Project '$project_name' has live test enabled"
+            echo "should_run_e2e=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Project '$project_name' not found in e2e-test-config.json or live test disabled"
+            echo "should_run_e2e=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run E2E tests
-        # if: steps.check_e2e_live.outputs.should_run_e2e == 'true'
+        if: steps.check_e2e_live.outputs.should_run_e2e == 'true'
         run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep="live/" --skip-nx-cache --skipInstall --parallel=1
 
       # - name: Build project

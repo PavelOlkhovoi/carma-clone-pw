@@ -142,6 +142,7 @@ jobs:
           # echo "$result_json"
           echo "::set-output name=project_list::$result_json"
           echo "PROJECT_LIST=${result_json}" >> $GITHUB_ENV
+
       - name: Generate E2E project list
         if: steps.list_affected_projects.outputs.project_list != ''
         id: generate_e2e_list

@@ -809,28 +809,28 @@ jobs:
         if: steps.single-job-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
-      - name: Check E2E live configuration
-        id: check_e2e_live
-        run: |
-          project_name="${{ github.event.inputs['project-name'] }}"
-          echo "Checking E2E live configuration for project: $project_name"
+      # - name: Check E2E live configuration
+      #   id: check_e2e_live
+      #   run: |
+      #     project_name="${{ github.event.inputs['project-name'] }}"
+      #     echo "Checking E2E live configuration for project: $project_name"
 
-          # Load e2e-test-config.json
-          e2e_config=$(cat e2e-test-config.json)
+      #     # Load e2e-test-config.json
+      #     e2e_config=$(cat e2e-test-config.json)
 
-          # Check if project exists in e2e-test-config.json and has live: true
-          live_test=$(echo "$e2e_config" | jq -r --arg project "$project_name" '.projects[$project].live // false')
+      #     # Check if project exists in e2e-test-config.json and has live: true
+      #     live_test=$(echo "$e2e_config" | jq -r --arg project "$project_name" '.projects[$project].live // false')
 
-          if [ "$live_test" = "true" ]; then
-            echo "✅ Project '$project_name' has live test enabled"
-            echo "should_run_e2e=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Project '$project_name' not found in e2e-test-config.json or live test disabled"
-            echo "should_run_e2e=false" >> $GITHUB_OUTPUT
-          fi
+      #     if [ "$live_test" = "true" ]; then
+      #       echo "✅ Project '$project_name' has live test enabled"
+      #       echo "should_run_e2e=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "❌ Project '$project_name' not found in e2e-test-config.json or live test disabled"
+      #       echo "should_run_e2e=false" >> $GITHUB_OUTPUT
+      #     fi
 
       - name: Run E2E tests
-        if: steps.check_e2e_live.outputs.should_run_e2e == 'true'
+        # if: steps.check_e2e_live.outputs.should_run_e2e == 'true'
         run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep="live/" --skip-nx-cache --skipInstall --parallel=1
 
       # - name: Build project

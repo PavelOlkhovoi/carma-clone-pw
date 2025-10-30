@@ -258,7 +258,7 @@ jobs:
           ${{ env.ADDITIONAL_ENVS }} npx nx run ${{ matrix.project }}:build --configuration=production --base="${{ env.BASE_URL }}" --output-style=stream-without-prefixes
         shell: bash
 
-  smokeTest:
+  smokeTestPr:
     needs: [determine_projects]
     runs-on: ubuntu-latest
     if: ${{ needs.determine_projects.outputs.is_affected == 'true' && needs.determine_projects.outputs.e2e_list != '[]' }}

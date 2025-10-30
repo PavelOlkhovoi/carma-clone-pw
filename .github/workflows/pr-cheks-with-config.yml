@@ -1,6 +1,6 @@
 name: Check PR with config
 run-name: >
-  🔍 : ${{ github.event.pull_request.title }}
+  🔍 : ${{ github.event.pull_request.title }} - with config
 on:
   pull_request:
     branches:

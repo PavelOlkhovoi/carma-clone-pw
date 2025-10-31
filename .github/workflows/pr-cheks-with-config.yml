@@ -323,8 +323,10 @@ jobs:
       - name: Report the smoke test failure
         if: failure()
         run: |
+          FAILED_TEST=$(grep -E "\.spec\.ts.*FAILED" test_output.log | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' 2>/dev/null || echo "Unknown test")
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
+            echo "**Failed test:** $FAILED_TEST"
             echo ""
             echo "### 🔁 Run locally via command"
             echo ""

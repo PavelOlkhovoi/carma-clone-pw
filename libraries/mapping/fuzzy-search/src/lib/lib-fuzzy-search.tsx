@@ -36,9 +36,11 @@ export interface FuseWithOption<T> extends Fuse<T> {
 const defaultIcon = (
   <FontAwesomeIcon
     icon={faLocationDot}
-    style={{
-      fontSize: "16px",
-    }}
+    style={
+      {
+        // fontSize: "16px",
+      }
+    }
   />
 );
 

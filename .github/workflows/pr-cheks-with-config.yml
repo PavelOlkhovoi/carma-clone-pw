@@ -306,23 +306,18 @@ jobs:
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
 
       - name: Run E2E tests
-        id: run_e2e_tests
         run: |
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
-          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall 2>&1 | tee test_output.log || echo "TEST_FAILED=true" >> $GITHUB_ENV
-        continue-on-error: true
-
-      - name: Show broken test name
-        if: always() && steps.run_e2e_tests.outcome == 'failure'
-        run: |
-          echo "🔍 Analyzing failed test output..."
-          if [ -f test_output.log ]; then
-            # Extract the specific test file that failed
-            FAILED_TEST=$(grep -E "\.spec\.ts.*FAILED" test_output.log | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' || echo "Unknown test")
-            echo "💥 Broken test: $FAILED_TEST"
-            echo "FAILED_TEST_NAME=$FAILED_TEST" >> $GITHUB_ENV
-          else
-            echo "💥 Test failed but no output log found"
+          set -o pipefail
+          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall 2>&1 | tee test_output.log
+          TEST_EXIT_CODE=$?
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "🔍 Test failed, analyzing output..."
+            if [ -f test_output.log ]; then
+              FAILED_TEST=$(grep -E "\.spec\.ts.*FAILED" test_output.log | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' || echo "Unknown test")
+              echo "💥 Broken test: $FAILED_TEST"
+            fi
+            exit $TEST_EXIT_CODE
           fi
 
       - name: Report the smoke test failure

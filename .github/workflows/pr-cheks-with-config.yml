@@ -331,15 +331,32 @@ jobs:
           else
             echo "No test_output.log file found"
           fi
-          FAILED_TEST=$(grep -E "(\.spec\.ts|FAIL|Failed|Error)" test_output.log | grep -E "\.spec\.ts" | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' 2>/dev/null || grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log | head -1 || echo "Unknown test")
+          # Capture all failed tests
+          FAILED_TESTS=($(grep -E "(\.spec\.ts|FAIL|Failed|Error)" test_output.log | grep -E "\.spec\.ts" | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' 2>/dev/null | sort -u || grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log | sort -u || echo "Unknown test"))
+          FAILED_TESTS_COUNT=${#FAILED_TESTS[@]}
+          
+          # Create grep pattern for multiple tests
+          if [ $FAILED_TESTS_COUNT -gt 1 ]; then
+            GREP_PATTERN=$(IFS='|'; echo "${FAILED_TESTS[*]}")
+            FAILED_TESTS_LIST=$(printf "- %s\n" "${FAILED_TESTS[@]}")
+          else
+            GREP_PATTERN="${FAILED_TESTS[0]}"
+            FAILED_TESTS_LIST="${FAILED_TESTS[0]}"
+          fi
+          
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
-            echo "**Failed test:** $FAILED_TEST"
+            if [ $FAILED_TESTS_COUNT -gt 1 ]; then
+              echo "**Failed tests ($FAILED_TESTS_COUNT):**"
+              echo "$FAILED_TESTS_LIST"
+            else
+              echo "**Failed test:** $FAILED_TESTS_LIST"
+            fi
             echo ""
             echo "### 🔁 Run locally via command"
             echo ""
             echo '```bash'
-            echo "npx nx e2e ${{ matrix.project }} --grep=\"$FAILED_TEST\" --skip-nx-cache --skipInstall"
+            echo "npx nx e2e ${{ matrix.project }} --grep=\"$GREP_PATTERN\" --skip-nx-cache --skipInstall"
             echo '```'
             echo ""
             echo "### ⚡ Re-run only the last failed"

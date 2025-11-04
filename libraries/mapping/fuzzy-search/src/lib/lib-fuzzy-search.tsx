@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationDot, faTimes } from "@fortawesome/free-solid-svg-icons";
 import type { BaseSelectRef } from "rc-select";
 
-import IconComp from "react-cismap/commons/Icon";
+// import IconComp from "react-cismap/commons/Icon";
 
 import {
   generateOptions,
@@ -36,9 +36,11 @@ export interface FuseWithOption<T> extends Fuse<T> {
 const defaultIcon = (
   <FontAwesomeIcon
     icon={faLocationDot}
-    style={{
-      fontSize: "16px",
-    }}
+    style={
+      {
+        // fontSize: "16px",
+      }
+    }
   />
 );
 
@@ -90,7 +92,7 @@ export function LibFuzzySearch({
 
   const inputStyle = {
     width: "calc(100% - 32px)",
-    // borderTopLeftRadius: 0,
+    borderTopLeftRadius: 0,
     fontSize: "14px",
   };
   const btnClosRef = useRef<HTMLButtonElement>(null);

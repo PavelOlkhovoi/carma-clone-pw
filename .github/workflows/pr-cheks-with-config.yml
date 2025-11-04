@@ -310,7 +310,7 @@ jobs:
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
           # Run tests and capture output for failed test detection
           set +e  # Don't exit on command failure
-          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall --reporter=junit,html 2>&1 | tee test_output.log
+          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall 2>&1 | tee test_output.log
           TEST_EXIT_CODE=$?
           set -e  # Re-enable exit on error
           
@@ -320,8 +320,8 @@ jobs:
           if [ "$TEST_EXIT_CODE" -ne 0 ] || [ "${JUNIT_FAILURES:-0}" -gt 0 ]; then
             echo "❌ Tests failed for ${{ matrix.project }} (exit code: $TEST_EXIT_CODE, junit failures: ${JUNIT_FAILURES:-0})"
             
-            # Simple failed test extraction
-            FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | head -5 | tr '\n' ', ' | sed 's/,$//')
+            # Extract only actually failed tests (from failure messages, not just mentioned files)
+            FAILED_TESTS=$(grep -B2 -A1 'FAILED' test_output.log | grep -o '[a-zA-Z0-9_-]*\.spec\.ts' | sort -u | head -5 | tr '\n' ', ' | sed 's/,$//')
             
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`" >> $GITHUB_STEP_SUMMARY
             if [ -n "$FAILED_TESTS" ]; then

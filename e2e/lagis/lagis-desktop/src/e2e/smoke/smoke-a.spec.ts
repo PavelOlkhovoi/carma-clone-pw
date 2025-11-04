@@ -116,8 +116,8 @@ test.describe("lagis smoke test", () => {
     // await expect(page.locator('text=LagIS')).toBeVisible();
 
     // Perform authentication
-    // await page.fill('input[type="email"]', "cismet");
-    // await page.fill('input[type="password"]', "cismet");
+    await page.fill('input[type="email"]', "cismet");
+    await page.fill('input[type="password"]', "cismet");
     await page.click(".ant-btn");
 
     // Wait for authentication and page load

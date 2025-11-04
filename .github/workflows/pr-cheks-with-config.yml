@@ -309,10 +309,18 @@ jobs:
         run: |
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
           # Run tests and capture output for failed test detection
-          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall --reporter=junit,html 2>&1 | tee test_output.log || {
-            echo "❌ Tests failed for ${{ matrix.project }}"
+          set +e  # Don't exit on command failure
+          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall --reporter=junit,html 2>&1 | tee test_output.log
+          TEST_EXIT_CODE=$?
+          set -e  # Re-enable exit on error
+          
+          # Check for failures in output (either exit code or JUnit failures)
+          JUNIT_FAILURES=$(grep -o 'failures="[0-9]*"' test_output.log | grep -o '[0-9]*' | head -1)
+          
+          if [ "$TEST_EXIT_CODE" -ne 0 ] || [ "${JUNIT_FAILURES:-0}" -gt 0 ]; then
+            echo "❌ Tests failed for ${{ matrix.project }} (exit code: $TEST_EXIT_CODE, junit failures: ${JUNIT_FAILURES:-0})"
             
-            # Simple failed test extraction (much simpler than before)
+            # Simple failed test extraction
             FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | head -5 | tr '\n' ', ' | sed 's/,$//')
             
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`" >> $GITHUB_STEP_SUMMARY
@@ -327,7 +335,9 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "📊 Check the Playwright HTML report in the artifacts for detailed failure information." >> $GITHUB_STEP_SUMMARY
             exit 1
-          }
+          fi
+          
+          echo "✅ All tests passed for ${{ matrix.project }}"
 
       - name: Upload test artifacts
         if: always()

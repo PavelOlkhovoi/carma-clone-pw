@@ -327,7 +327,7 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Files in current directory:"
           ls -la
-          
+
           if [ -f test_output.log ]; then
             echo "✅ Log file exists, showing last 20 lines:"
             tail -20 test_output.log
@@ -337,7 +337,7 @@ jobs:
             echo "Looking for any log files:"
             find . -name "*.log" -type f 2>/dev/null || echo "No log files found"
           fi
-          
+
           # Capture all failed tests with better error handling
           if [ -f test_output.log ]; then
             FAILED_TESTS=($(grep -E "(\.spec\.ts|FAIL|Failed|Error)" test_output.log | grep -E "\.spec\.ts" | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' 2>/dev/null | sort -u))
@@ -354,10 +354,10 @@ jobs:
           else
             FAILED_TESTS=("No log file found")
           fi
-          
+
           FAILED_TESTS_COUNT=${#FAILED_TESTS[@]}
           echo "🔍 Found $FAILED_TESTS_COUNT failed test(s): ${FAILED_TESTS[*]}"
-          
+
           # Create grep pattern for multiple tests
           if [ $FAILED_TESTS_COUNT -gt 1 ]; then
             GREP_PATTERN=$(IFS='|'; echo "${FAILED_TESTS[*]}")
@@ -369,7 +369,7 @@ jobs:
             GREP_PATTERN="${FAILED_TESTS[0]}"
             FAILED_TESTS_LIST="${FAILED_TESTS[0]}"
           fi
-          
+
           echo "📝 Writing to GitHub Step Summary..."
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
@@ -386,11 +386,6 @@ jobs:
             echo "npx nx e2e ${{ matrix.project }} --grep=\"$GREP_PATTERN\" --skip-nx-cache --skipInstall"
             echo '```'
             echo ""
-            echo "### ⚡ Re-run only the last failed"
-            echo ""
-            echo '```bash'
-            echo "npx nx e2e ${{ matrix.project }} --grep=smoke/ --skip-nx-cache --skipInstall --last-failed"
-            echo '```'
           } >> $GITHUB_STEP_SUMMARY
           echo "✅ Summary written to $GITHUB_STEP_SUMMARY"
 

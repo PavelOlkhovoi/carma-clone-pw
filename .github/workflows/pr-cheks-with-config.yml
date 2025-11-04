@@ -328,7 +328,7 @@ jobs:
           
           # Create grep pattern from failed tests (fallback to smoke/ if no tests found)
           if [ -n "$FAILED_TESTS" ]; then
-            GREP_PATTERN=$(echo "$FAILED_TESTS" | sed 's/,/|/g')
+            GREP_PATTERN=$(echo "$FAILED_TESTS" | sed 's/, /|/g')
           else
             GREP_PATTERN="smoke/"
           fi

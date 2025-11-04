@@ -339,7 +339,7 @@ jobs:
             echo "### 🔁 Run locally via command"
             echo ""
             echo '```bash'
-            echo "npx nx e2e ${{ matrix.project }} --grep=smoke/ --skip-nx-cache --skipInstall"
+            echo "npx nx e2e ${{ matrix.project }} --grep=\"$FAILED_TEST\" --skip-nx-cache --skipInstall"
             echo '```'
             echo ""
             echo "### ⚡ Re-run only the last failed"

@@ -361,7 +361,10 @@ jobs:
           # Create grep pattern for multiple tests
           if [ $FAILED_TESTS_COUNT -gt 1 ]; then
             GREP_PATTERN=$(IFS='|'; echo "${FAILED_TESTS[*]}")
-            FAILED_TESTS_LIST=$(printf "- %s\n" "${FAILED_TESTS[@]}")
+            FAILED_TESTS_LIST=""
+            for test in "${FAILED_TESTS[@]}"; do
+              FAILED_TESTS_LIST="${FAILED_TESTS_LIST}- ${test}\n"
+            done
           else
             GREP_PATTERN="${FAILED_TESTS[0]}"
             FAILED_TESTS_LIST="${FAILED_TESTS[0]}"
@@ -372,7 +375,7 @@ jobs:
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"
             if [ $FAILED_TESTS_COUNT -gt 1 ]; then
               echo "**Failed tests ($FAILED_TESTS_COUNT):**"
-              echo "$FAILED_TESTS_LIST"
+              echo -e "$FAILED_TESTS_LIST"
             else
               echo "**Failed test:** $FAILED_TESTS_LIST"
             fi

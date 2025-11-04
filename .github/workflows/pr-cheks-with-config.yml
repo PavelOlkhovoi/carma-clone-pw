@@ -308,10 +308,17 @@ jobs:
       - name: Run E2E tests
         run: |
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
-          # Simple test execution with inline failure handling
-          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall --reporter=junit,html || {
+          # Run tests and capture output for failed test detection
+          PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall --reporter=junit,html 2>&1 | tee test_output.log || {
             echo "❌ Tests failed for ${{ matrix.project }}"
+            
+            # Simple failed test extraction (much simpler than before)
+            FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | head -5 | tr '\n' ', ' | sed 's/,$//')
+            
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`" >> $GITHUB_STEP_SUMMARY
+            if [ -n "$FAILED_TESTS" ]; then
+              echo "**Failed tests:** $FAILED_TESTS" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 🔁 Run locally:" >> $GITHUB_STEP_SUMMARY
             echo '```bash' >> $GITHUB_STEP_SUMMARY

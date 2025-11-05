@@ -310,13 +310,13 @@ jobs:
         run: |
           project="${{ matrix.project }}"
           echo "Checking if smoke folder exists for project: $project"
-          
+
           # Remove "e2e-" prefix if present to get the actual folder name
           folder_name=$(echo "$project" | sed 's/^e2e-//')
           echo "Looking for folder name: $folder_name"
-          
-          # Find the e2e project folder (could be at different levels)
-          e2e_project_path=$(find e2e -name "$folder_name" -type d | head -1)
+
+          # Find the e2e project folder (search at second level to skip group folders)
+          e2e_project_path=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d | head -1)
           if [ -z "$e2e_project_path" ]; then
             echo ":x: E2E project folder not found: $folder_name (from project: $project)"
             echo "has_smoke_tests=false" >> $GITHUB_OUTPUT
@@ -344,7 +344,7 @@ jobs:
         run: |
           echo "📋 Smoke folder check results for: ${{ matrix.project }}"
           echo "Has smoke tests: ${{ steps.check_e2e_smoke_folder.outputs.has_smoke_tests }}"
-          
+
           if [ "${{ steps.check_e2e_smoke_folder.outputs.has_smoke_tests }}" = "true" ]; then
             echo "✅ Smoke tests are available - will proceed with E2E testing"
           else

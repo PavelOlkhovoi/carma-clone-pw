@@ -309,34 +309,16 @@ jobs:
         id: check_e2e_smoke_folder
         run: |
           project="${{ matrix.project }}"
-          echo "Checking if smoke folder exists for project: $project"
-
-          # Remove "e2e-" prefix if present to get the actual folder name
           folder_name=$(echo "$project" | sed 's/^e2e-//')
-          echo "Looking for folder name: $folder_name"
 
-          # Find the e2e project folder (search at second level to skip group folders)
-          e2e_project_path=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d | head -1)
-          if [ -z "$e2e_project_path" ]; then
-            echo ":x: E2E project folder not found: $folder_name (from project: $project)"
-            echo "has_smoke_tests=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Found e2e project path: $e2e_project_path"
-          smoke_folder_path="$e2e_project_path/src/e2e/smoke"
-          echo "Looking for smoke folder: $smoke_folder_path"
-          if [ -d "$smoke_folder_path" ]; then
-            # Check if there are any test files in the smoke folder
-            file_count=$(find "$smoke_folder_path" -type f -name "*.spec.ts" | wc -l)
-            if [ "$file_count" -gt 0 ]; then
-              echo ":white_check_mark: Smoke folder exists with $file_count test file(s)"
-              echo "has_smoke_tests=true" >> $GITHUB_OUTPUT
-            else
-              echo ":x: Smoke folder exists but no .spec.ts files found"
-              echo "has_smoke_tests=false" >> $GITHUB_OUTPUT
-            fi
+          # Find smoke test files directly (combines folder and file check)
+          smoke_files=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d -exec find {} -path "*/src/e2e/smoke/*.spec.ts" -type f \; 2>/dev/null | wc -l)
+
+          if [ "$smoke_files" -gt 0 ]; then
+            echo "✅ Found $smoke_files smoke test file(s) for $project"
+            echo "has_smoke_tests=true" >> $GITHUB_OUTPUT
           else
-            echo ":x: Smoke folder does not exist: $smoke_folder_path"
+            echo "❌ No smoke tests found for $project"
             echo "has_smoke_tests=false" >> $GITHUB_OUTPUT
           fi
 

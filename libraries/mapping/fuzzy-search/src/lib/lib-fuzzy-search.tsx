@@ -92,7 +92,7 @@ export function LibFuzzySearch({
 
   const inputStyle = {
     width: "calc(100% - 32px)",
-    borderTopLeftRadius: 0,
+    // borderTopLeftRadius: 0,
     fontSize: "14px",
   };
   const btnClosRef = useRef<HTMLButtonElement>(null);

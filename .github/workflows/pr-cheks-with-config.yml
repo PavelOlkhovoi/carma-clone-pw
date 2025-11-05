@@ -305,7 +305,36 @@ jobs:
           echo "Running E2E tests for project: ${{ matrix.project }}"
           echo "This corresponds to the E2E test job for ${{ matrix.project }}"
 
+      - name: Check E2E smoke folder exists
+        id: check_e2e_smoke_folder
+        run: |
+          project="${{ matrix.project }}"
+          folder_name=$(echo "$project" | sed 's/^e2e-//')
+
+          # Find smoke test files directly (combines folder and file check)
+          smoke_files=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d -exec find {} -path "*/src/e2e/smoke/*.spec.ts" -type f \; 2>/dev/null | wc -l)
+
+          if [ "$smoke_files" -gt 0 ]; then
+            echo "✅ Found $smoke_files smoke test file(s) for $project"
+            echo "has_smoke_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No smoke tests found for $project"
+            echo "has_smoke_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check Smoke folders result
+        run: |
+          echo "📋 Smoke folder check results for: ${{ matrix.project }}"
+          echo "Has smoke tests: ${{ steps.check_e2e_smoke_folder.outputs.has_smoke_tests }}"
+
+          if [ "${{ steps.check_e2e_smoke_folder.outputs.has_smoke_tests }}" = "true" ]; then
+            echo "✅ Smoke tests are available - will proceed with E2E testing"
+          else
+            echo "❌ No smoke tests found - skipping E2E testing"
+          fi
+
       - name: Run E2E tests
+        if: steps.check_e2e_smoke_folder.outputs.has_smoke_tests == 'true'
         run: |
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
           set -o pipefail
@@ -325,14 +354,14 @@ jobs:
         run: |
           # Simple failed test extraction
           FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-          
+
           # Create grep pattern from failed tests (fallback to smoke/ if no tests found)
           if [ -n "$FAILED_TESTS" ]; then
             GREP_PATTERN=$(echo "$FAILED_TESTS" | sed 's/, /|/g')
           else
             GREP_PATTERN="smoke/"
           fi
-          
+
           # Write summary
           {
             echo "## ❌ Smoke Test Failed for \`${{ matrix.project }}\`"

@@ -340,7 +340,19 @@ jobs:
             echo "has_smoke_tests=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check Smoke folders result
+        run: |
+          echo "📋 Smoke folder check results for: ${{ matrix.project }}"
+          echo "Has smoke tests: ${{ steps.check_e2e_smoke_folder.outputs.has_smoke_tests }}"
+          
+          if [ "${{ steps.check_e2e_smoke_folder.outputs.has_smoke_tests }}" = "true" ]; then
+            echo "✅ Smoke tests are available - will proceed with E2E testing"
+          else
+            echo "❌ No smoke tests found - skipping E2E testing"
+          fi
+
       - name: Run E2E tests
+        if: steps.check_e2e_smoke_folder.outputs.has_smoke_tests == 'true'
         run: |
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
           set -o pipefail

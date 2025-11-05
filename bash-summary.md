@@ -240,6 +240,58 @@ echo "Re-run command: npx nx e2e project --grep=\"$GREP_PATTERN\""
 7. **Use `2>&1`** to capture both stdout and stderr in logs
 8. **Chain commands with pipes** for powerful text processing
 
+## Test Operators and Conditionals
+
+### String Testing with `[ -z ]`
+```bash
+# Check if variable is empty (zero length)
+if [ -z "$variable" ]; then
+    echo "Variable is empty or unset"
+fi
+
+# Check if variable is NOT empty
+if [ -n "$variable" ]; then
+    echo "Variable has content"
+fi
+```
+
+### Common Test Operators
+| **Operator** | **Meaning** | **Example** |
+|--------------|-------------|-------------|
+| `-z "$var"` | String is empty | `[ -z "" ]` → true |
+| `-n "$var"` | String is NOT empty | `[ -n "hello" ]` → true |
+| `-f "$file"` | File exists | `[ -f "test.txt" ]` → true if file exists |
+| `-d "$dir"` | Directory exists | `[ -d "folder" ]` → true if directory exists |
+| `"$a" = "$b"` | Strings are equal | `[ "$name" = "John" ]` → true if equal |
+
+### Find Command with Depth Control
+```bash
+# Search at specific depth levels to avoid unwanted matches
+find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d | head -1
+
+# Parameters explained:
+# -mindepth 2: Start searching at depth 2 (skip e2e/group/)
+# -maxdepth 2: Stop searching at depth 2 (only look at e2e/group/project/)
+# -name: Search by name pattern
+# -type d: Only find directories
+# | head -1: Take only the first match
+```
+
+### Practical Example: Project Folder Detection
+```bash
+# Remove prefix from project name
+folder_name=$(echo "$project" | sed 's/^e2e-//')
+
+# Find project folder at second level (avoids group folder conflicts)
+e2e_project_path=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d | head -1)
+
+# Check if folder was found
+if [ -z "$e2e_project_path" ]; then
+    echo "Project folder not found"
+    exit 1
+fi
+```
+
 ## Useful References
 
 - [Bash Manual](https://www.gnu.org/software/bash/manual/)

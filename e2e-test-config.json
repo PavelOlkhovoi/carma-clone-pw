@@ -9,7 +9,7 @@
       "live": false
     },
     "geoportal": {
-      "smoke": false,
+      "smoke": true,
       "live": false
     },
     "e-auto-ladestation": {

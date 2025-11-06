@@ -872,7 +872,7 @@ jobs:
             echo "🔍 Test failed, analyzing output..."
             if [ -f test_output.log ]; then
               # Extract failed and flaky tests
-              FAILED_TESTS_LIST=$(grep -A20 -E "(failed|flaky)" test_output.log | grep -o "[a-zA-Z0-9_-]*\.spec\.ts" | sort -u | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+              FAILED_TESTS_LIST=$(grep -A20 "failed" temp-test-result.txt | grep -B20 "flaky" | sed '$d' | grep -o "[a-zA-Z0-9_-]*\.spec\.ts" | sort -u)
               echo "💥 Broken tests: ${FAILED_TESTS_LIST:-Unknown}"
             fi
             exit $TEST_EXIT_CODE

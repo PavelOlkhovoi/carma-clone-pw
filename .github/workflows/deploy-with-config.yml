@@ -876,6 +876,8 @@ jobs:
             fi
             exit $TEST_EXIT_CODE
           fi
+          echo "Full test_output.log:"
+          cat test_output.log
 
       - name: Report the live test failure
         if: failure() && !cancelled()

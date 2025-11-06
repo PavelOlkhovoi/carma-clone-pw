@@ -876,12 +876,12 @@ jobs:
             fi
             exit $TEST_EXIT_CODE
           fi
-          echo "Full test_output.log:"
-          cat test_output.log
 
       - name: Report the live test failure
         if: failure() && !cancelled()
         run: |
+          echo "Full test_output.log:"
+          cat test_output.log
           # Simple failed test extraction
           FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
 

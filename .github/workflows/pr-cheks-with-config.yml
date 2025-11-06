@@ -339,15 +339,15 @@ jobs:
           echo "🧪 Running E2E tests for: ${{ matrix.project }}"
           set -o pipefail
           PW_CHANNEL=chrome npx nx e2e ${{ matrix.project }} --grep="smoke/" --skip-nx-cache --skipInstall 2>&1 | tee test_output.log
-          TEST_EXIT_CODE=$?
-          if [ $TEST_EXIT_CODE -ne 0 ]; then
-            echo "🔍 Test failed, analyzing output..."
-            if [ -f test_output.log ]; then
-              FAILED_TEST=$(grep -E "\.spec\.ts.*FAILED" test_output.log | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' || echo "Unknown test")
-              echo "💥 Broken test: $FAILED_TEST"
-            fi
-            exit $TEST_EXIT_CODE
-          fi
+          # TEST_EXIT_CODE=$?
+          # if [ $TEST_EXIT_CODE -ne 0 ]; then
+          #   echo "🔍 Test failed, analyzing output..."
+          #   if [ -f test_output.log ]; then
+          #     FAILED_TEST=$(grep -E "\.spec\.ts.*FAILED" test_output.log | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' || echo "Unknown test")
+          #     echo "💥 Broken test: $FAILED_TEST"
+          #   fi
+          #   exit $TEST_EXIT_CODE
+          # fi
 
       - name: Report the smoke test failure
         if: failure() && !cancelled()

@@ -853,7 +853,7 @@ jobs:
           folder_name=$(echo "$project" | sed 's/^e2e-//')
 
           # Find live test files directly (combines folder and file check)
-          live_files=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d -exec find {} -path "*/src/e2e/live/*.spec.ts" -type f \; 2>/dev null | wc -l)
+          live_files=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d -exec find {} -path "*/src/e2e/live/*.spec.ts" -type f \; 2>/dev/null | wc -l)
 
           if [ "$live_files" -gt 0 ]; then
             echo "✅ Found $live_files live test file(s) for $project"

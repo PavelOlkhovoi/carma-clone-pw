@@ -1,11 +1,11 @@
 {
   "projects": {
     "stadtplan": {
-      "smoke": false,
+      "smoke": true,
       "live": true
     },
     "kulturstadtplan": {
-      "smoke": false,
+      "smoke": true,
       "live": true
     },
     "geoportal": {
@@ -17,7 +17,7 @@
       "live": true
     },
     "e-bikes": {
-      "smoke": false,
+      "smoke": true,
       "live": true
     },
     "kita-finder": {

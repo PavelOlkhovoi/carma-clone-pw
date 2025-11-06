@@ -881,7 +881,7 @@ jobs:
         if: failure() && !cancelled()
         run: |
           echo "Full test_output.log:"
-          grep -A20 "failed" test_output.log | grep -o "[a-zA-Z0-9_-]*\.spec\.ts" 
+          grep -A20 "failed" test_output.log | grep -o "[a-zA-Z0-9_-]*\.spec\.ts" | sort -u
           # Simple failed test extraction
           FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
 

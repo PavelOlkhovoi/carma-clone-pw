@@ -871,8 +871,9 @@ jobs:
           if [ $TEST_EXIT_CODE -ne 0 ]; then
             echo "🔍 Test failed, analyzing output..."
             if [ -f test_output.log ]; then
-              FAILED_TEST=$(grep -E "\.spec\.ts.*FAILED" test_output.log | head -1 | sed -E 's/.*\/([^\/]+\.spec\.ts).*/\1/' || echo "Unknown test")
-              echo "💥 Broken test: $FAILED_TEST"
+              # Extract failed and flaky tests
+              FAILED_TESTS_LIST=$(grep -A20 -E "(failed|flaky)" test_output.log | grep -o "[a-zA-Z0-9_-]*\.spec\.ts" | sort -u | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+              echo "💥 Broken tests: ${FAILED_TESTS_LIST:-Unknown}"
             fi
             exit $TEST_EXIT_CODE
           fi
@@ -899,7 +900,7 @@ jobs:
             echo ""
             echo "### 🔁 Run locally:"
             echo '```bash'
-            echo "npx nx e2e ${{ github.event.inputs['project-name'] }} --grep=\"$GREP_PATTERN\" --skip-nx-cache --skipInstall"
+            echo "npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep=\"$GREP_PATTERN\" --skip-nx-cache --skipInstall"
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
 

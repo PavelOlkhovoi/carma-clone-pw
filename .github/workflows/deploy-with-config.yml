@@ -883,7 +883,7 @@ jobs:
         run: |
           echo "Full test_output.log:"
           # grep -A20 "failed" test_output.log | grep -o "[a-zA-Z0-9_-]*\.spec\.ts" | sort -u
-          grep -A20 "failed" test_output.log
+          grep -A20 "failed" test_output.log | grep -B20 "flaky" | sed '$d'
           # Simple failed test extraction
           FAILED_TESTS=$(grep -o "[a-zA-Z0-9_-]*\.spec\.ts" test_output.log 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
 
@@ -901,7 +901,7 @@ jobs:
             echo ""
             echo "### 🔁 Run locally:"
             echo '```bash'
-            echo "npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep=\"$GREP_PATTERN\" --skip-nx-cache --skipInstall"
+            echo "npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep=\"$GREP_PATTERN\" --skip-nx-cache --skipInstall --parallel=1"
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
 

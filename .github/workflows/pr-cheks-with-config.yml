@@ -177,11 +177,20 @@ jobs:
                 
                 if [ "$smoke_test" = "true" ]; then
                   echo "✅ Project '$project' has smoke test enabled in e2e-test-config.json"
-                  if [ "$first" = true ]; then
-                    e2e_list="$e2e_list\"$e2e_proj\""
-                    first=false
+                  
+                  # Check if smoke test folder exists and contains .spec.ts files
+                  smoke_files=$(find e2e -mindepth 2 -maxdepth 2 -name "$project" -type d -exec find {} -path "*/src/e2e/smoke/*.spec.ts" -type f \; 2>/dev/null | wc -l)
+                  
+                  if [ "$smoke_files" -gt 0 ]; then
+                    echo "✅ Found $smoke_files smoke test file(s) for $project"
+                    if [ "$first" = true ]; then
+                      e2e_list="$e2e_list\"$e2e_proj\""
+                      first=false
+                    else
+                      e2e_list="$e2e_list, \"$e2e_proj\""
+                    fi
                   else
-                    e2e_list="$e2e_list, \"$e2e_proj\""
+                    echo "❌ No smoke test files found in smoke/ folder for project '$project'"
                   fi
                 else
                   echo "❌ Project '$project' not found in e2e-test-config.json or smoke test disabled"

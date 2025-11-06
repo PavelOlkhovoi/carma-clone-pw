@@ -846,8 +846,24 @@ jobs:
             echo "should_run_e2e=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check E2E live folder
+        id: check_e2e_live_folder
+        run: |
+          project="${{ github.event.inputs['project-name'] }}"
+          folder_name=$(echo "$project" | sed 's/^e2e-//')
+
+          # Find live test files directly (combines folder and file check)
+          live_files=$(find e2e -mindepth 2 -maxdepth 2 -name "$folder_name" -type d -exec find {} -path "*/src/e2e/live/*.spec.ts" -type f \; 2>/dev null | wc -l)
+
+          if [ "$live_files" -gt 0 ]; then
+            echo "✅ Found $live_files live test file(s) for $project"
+            echo "has_live_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No live tests found for $project"
+            echo "has_live_tests=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run E2E tests
-        if: steps.check_e2e_live.outputs.should_run_e2e == 'true'
+        if: steps.check_e2e_live.outputs.should_run_e2e == 'true' && steps.check_e2e_live_folder.outputs.has_live_tests == 'true'
         run: PW_CHANNEL=chrome npx nx e2e e2e-${{ github.event.inputs['project-name'] }} --grep="live/" --skip-nx-cache --skipInstall --parallel=1
 
       - name: Step after tests

@@ -213,7 +213,8 @@ F
   2 failed
     [chrome] › e2e/geoportal/geoportal/src/e2e/live/smoke-geo-a.spec.ts:11:7 › geoportal smoke test › Map loads with key controls and buttons 
     [chrome] › e2e/geoportal/geoportal/src/e2e/live/smoke-geo-b.spec.ts:11:7 › geoportal smoke test › Map loads with key controls and buttons 
-  
+  1 flaky
+    [chrome] › e2e/geoportal/geoportal/src/e2e/live/fuzzy-search.spec.ts:57:7 › geoportal fuzzy search test › Map loads with key controls and buttons
   1 passed (1.9m)
 
 

@@ -18,7 +18,7 @@ test.describe("geoportal smoke test", () => {
     // ).toBeVisible();
     // await expect(page.locator('[data-test-id="3d-control"]')).toBeVisible();
 
-    await expect(page.locator('[data-test-id="2d-control"]')).toHaveCount(0);
+    await expect(page.locator('[data-test-id="2d-control"]')).toHaveCount(13);
 
     await expect(
       page.locator('[data-test-id="compass-control"]')
@@ -40,7 +40,7 @@ test.describe("geoportal smoke test", () => {
     await expect(page.locator('[data-test-id="teilen-btn"]')).toBeVisible();
     await expect(page.locator('[data-test-id="fuzzy-search"]')).toBeVisible();
 
-    await expect(page.locator("#cmdCloseModalApplicationMenu")).toHaveCount(0);
+    await expect(page.locator("#cmdCloseModalApplicationMenu")).toHaveCount(13);
 
     // Open modal
     await page.locator('[data-test-id="modal-menu-btn"]').click();

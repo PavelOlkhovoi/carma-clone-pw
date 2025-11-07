@@ -115,10 +115,9 @@ test.describe("Geoportal add map layers", () => {
       name: "Suchbegriff eingeben",
     });
     await searchBox.click();
+    await searchBox.fill(LAYER_UI_MAP_TEXT);
 
-    await page.keyboard.type(LAYER_UI_MAP_TEXT, { delay: 100 });
-
-    await page.waitForTimeout(300);
+    // await page.waitForTimeout(300);
     await expect.poll(() => cards.count()).toBe(1);
 
     // Apply layer to map

@@ -17,7 +17,7 @@ export default defineConfig({
     navigationTimeout: 15_000, // Reduce navigation timeout
     actionTimeout: 10_000, // Add action timeout
     launchOptions: {
-      slowMo: 5000,
+      slowMo: 3000,
     },
   },
   projects: [

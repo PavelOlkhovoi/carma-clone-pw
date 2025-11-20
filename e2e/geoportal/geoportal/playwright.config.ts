@@ -15,10 +15,10 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     navigationTimeout: 15_000,
-    actionTimeout: 10_000,
-    launchOptions: {
-      slowMo: 1000,
-    },
+    // actionTimeout: 10_000,
+    // launchOptions: {
+    //   slowMo: 1000,
+    // },
   },
   projects: [
     {

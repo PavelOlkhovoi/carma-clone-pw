@@ -887,7 +887,7 @@ jobs:
 
           # Write summary
           {
-            echo "## ❌ Smoke Test Failed for \`${{ github.event.inputs['project-name'] }}\`"
+            echo "## ❌ Live Test Failed for \`${{ github.event.inputs['project-name'] }}\`"
             echo "**Failed tests:** ${FAILED_TESTS:-Unknown}"
             echo ""
             echo "### 🔁 Run locally:"

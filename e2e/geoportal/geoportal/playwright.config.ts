@@ -9,16 +9,16 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "github",
+  // reporter: "github",
   use: {
     baseURL: "http://localhost:4222",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    navigationTimeout: 15_000, // Reduce navigation timeout
+    navigationTimeout: 15_000,
     actionTimeout: 10_000,
-    // launchOptions: {
-    //   slowMo: 500,
-    // },
+    launchOptions: {
+      slowMo: 1000,
+    },
   },
   projects: [
     {

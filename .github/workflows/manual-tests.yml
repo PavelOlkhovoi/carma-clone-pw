@@ -99,7 +99,7 @@ jobs:
 
           # Fallback to all test types if none selected
           if [ -z "$GREP_PATTERN" ]; then
-            GREP_PATTERN="flaky/|live/|smoke/"
+            GREP_PATTERN="/"
           fi
 
           echo "Running tests with pattern: $GREP_PATTERN"

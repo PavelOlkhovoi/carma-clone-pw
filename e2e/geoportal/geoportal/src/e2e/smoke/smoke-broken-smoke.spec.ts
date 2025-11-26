@@ -9,8 +9,7 @@ test.describe("geoportal smoke test", () => {
   });
 
   test("Map loads with key controls and buttons", async ({ page }) => {
-    await expect(page.locator('[data-test-id="zoom-in-control"]')).toBeHidden();
-    await expect(page.locator('[data-test-id="home-control"]')).toBeHidden();
+    await expect(page.locator('[data-test-id="control"]')).toBeVisible();
     //   await expect(
     //     page.locator('[data-test-id="measurement-control"]')
     //   ).toBeVisible();

@@ -1,8 +1,6 @@
-// Built-in Modules
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-// 3rd party Modules
 import { Button, Modal } from "antd";
 import { ErrorBoundary } from "react-error-boundary";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

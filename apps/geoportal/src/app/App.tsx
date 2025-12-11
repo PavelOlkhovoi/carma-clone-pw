@@ -7,7 +7,7 @@ import { Button, Modal } from "antd";
 import { ErrorBoundary } from "react-error-boundary";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-// 1st party Modules
+
 import { CrossTabCommunicationContextProvider } from "react-cismap/contexts/CrossTabCommunicationContextProvider";
 
 import {
@@ -22,7 +22,6 @@ import { TweakpaneProvider } from "@carma-commons/debug";
 import { TAILWIND_CLASSNAMES_FULLSCREEN_FIXED } from "@carma-commons/utils";
 import { MobileWarningMessage } from "@carma-mapping/components";
 
-// Local Modules
 import AppErrorFallback from "./components/AppErrorFallback";
 import MapWrapper from "./components/GeoportalMap/controls/MapWrapper";
 import LoginForm from "./components/LoginForm";

@@ -55,7 +55,7 @@ jobs:
           key: ${{ steps.node-cache-key.outputs.key }}
 
       - name: Install dependencies
-        if: steps.e2e-manual-node-cache.outputs.cache-hit != 'true'
+        # if: steps.e2e-manual-node-cache.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Set Directory as Safe

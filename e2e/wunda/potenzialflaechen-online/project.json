@@ -9,7 +9,7 @@
     "e2e": {
       "executor": "@nx/playwright:playwright",
       "options": {
-        "config": "e2e/wunda/potenzialflaechen/playwright.config.ts"
+        "config": "e2e/wunda/potenzialflaechen-online/playwright.config.ts"
       },
       "configurations": {
         "production": {

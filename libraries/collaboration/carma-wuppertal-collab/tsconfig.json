@@ -4,5 +4,9 @@
     "strict": false,
     "moduleResolution": "node"
   },
-  "exclude": ["**/*.stories.tsx"]
+  "exclude": [
+    "**/*.stories.tsx",
+    "wuppertal-collab-submodule/**/*",
+    "src/secondary-info-modals/**/*"
+  ]
 }

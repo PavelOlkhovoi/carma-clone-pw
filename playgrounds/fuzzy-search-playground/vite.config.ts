@@ -2,6 +2,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { submoduleRollupOptions } from '../../vite.shared.config';
 
 // Use an environment variable to set the base URL
 const base = process.env.BASE_URL || "/";
@@ -31,6 +32,10 @@ export default defineConfig({
   // },
 
   build: {
+    rollupOptions: {
+      external: [...submoduleRollupOptions.external],
+      onwarn: submoduleRollupOptions.onwarn,
+    },
     outDir: "../../dist/playgrounds/fuzzy-search-playground",
     reportCompressedSize: true,
     commonjsOptions: {

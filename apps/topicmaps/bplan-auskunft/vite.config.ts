@@ -4,6 +4,7 @@ import dts from "vite-plugin-dts";
 import react from '@vitejs/plugin-react'
 import * as path from "path";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { submoduleRollupOptions } from '../../../vite.shared.config';
 
 
 export default defineConfig({
@@ -42,9 +43,10 @@ export default defineConfig({
     reportCompressedSize: true,
     commonjsOptions: {   },
     rollupOptions: {
+      onwarn: submoduleRollupOptions.onwarn,
       logLevel: "info",
       // preserveSymlinks: true,
-      //external: ["@carma-collab/wuppertal/bplan-auskunft"],
+      //external: ["@carma-collab/wuppertal/bplan-auskunft", ...submoduleRollupOptions.external],
     },
   },
 

@@ -14,8 +14,15 @@ export default defineConfig({
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.json'),
+      exclude: ['wuppertal-collab-submodule/**/*', '**/*.stories.tsx'],
     }),
   ],
+
+  resolve: {
+    alias: {
+      'wuppertal-collab-submodule': path.resolve(__dirname, 'wuppertal-collab-submodule'),
+    },
+  },
 
   // Uncomment this if you are using workers.
   // worker: {
@@ -41,7 +48,14 @@ export default defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: [],
+      external: ['@carma/math', '@carma-mapping/carma-map-api'],
+      onwarn(warning, warn) {
+        // Suppress warnings from submodule files
+        if (warning.id?.includes('wuppertal-collab-submodule')) {
+          return;
+        }
+        warn(warning);
+      },
     },
   },
 

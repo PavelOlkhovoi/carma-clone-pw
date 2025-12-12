@@ -33,6 +33,16 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    rollupOptions: {
+      external: ['@carma/math', '@carma-mapping/carma-map-api'],
+      onwarn(warning, warn) {
+        // Suppress warnings from submodule files
+        if (warning.id?.includes('wuppertal-collab-submodule') || warning.id?.includes('pecher-collab-submodule')) {
+          return;
+        }
+        warn(warning);
+      },
+    },
   },
 
   define: {

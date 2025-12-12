@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { submoduleRollupOptions } from '../../vite.shared.config';
 
 const CESIUM_PATHNAME = "__cesium__";
 
@@ -43,6 +44,10 @@ export default defineConfig({
   },
 
   build: {
+    rollupOptions: {
+      external: [...submoduleRollupOptions.external],
+      onwarn: submoduleRollupOptions.onwarn,
+    },
     outDir: "../../dist/apps/geoportal",
     reportCompressedSize: true,
     commonjsOptions: {

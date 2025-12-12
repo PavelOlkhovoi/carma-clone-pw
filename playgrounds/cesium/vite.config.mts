@@ -13,6 +13,7 @@ How to fix Cesium related issues as of 2024-05-17, cesium@1.117
 1. Import the styles in your app
 
 import "cesium/Build/Cesium/Widgets/widgets.css";
+import { submoduleRollupOptions } from '../../vite.shared.config';
 
 2. Copy the assets to the dist folder 
 see vitestaticcopy plugin
@@ -75,6 +76,8 @@ export default defineConfig({
     sourcemap: false,
     commonjsOptions: { transformMixedEsModules: true },
     rollupOptions: {
+      external: [...submoduleRollupOptions.external],
+      onwarn: submoduleRollupOptions.onwarn,
       onwarn: (warning, warn) => {
         // supress source map warnings on build
         if (

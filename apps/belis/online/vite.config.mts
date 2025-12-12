@@ -52,6 +52,10 @@ export default defineConfig({
   },
 
   build: {
+    rollupOptions: {
+      external: [...submoduleRollupOptions.external],
+      onwarn: submoduleRollupOptions.onwarn,
+    },
     outDir: '../../../dist/apps/belis/online',
     reportCompressedSize: true,
     commonjsOptions: {

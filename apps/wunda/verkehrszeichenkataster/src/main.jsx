@@ -55,6 +55,7 @@ const AuthWrapper = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    console.log("xxx");
     dispatch(checkJWTValidation());
   }, []);
 

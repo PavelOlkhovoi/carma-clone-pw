@@ -3,7 +3,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { comlink } from 'vite-plugin-comlink';
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { submoduleRollupOptions } from '../../../vite.shared.config';
 
 export default defineConfig({
   root: __dirname,

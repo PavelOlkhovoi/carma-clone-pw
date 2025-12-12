@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { submoduleRollupOptions } from '../../vite.shared.config';
 
 /* 
 
@@ -13,7 +14,6 @@ How to fix Cesium related issues as of 2024-05-17, cesium@1.117
 1. Import the styles in your app
 
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import { submoduleRollupOptions } from '../../vite.shared.config';
 
 2. Copy the assets to the dist folder 
 see vitestaticcopy plugin
@@ -77,9 +77,15 @@ export default defineConfig({
     commonjsOptions: { transformMixedEsModules: true },
     rollupOptions: {
       external: [...submoduleRollupOptions.external],
-      onwarn: submoduleRollupOptions.onwarn,
       onwarn: (warning, warn) => {
-        // supress source map warnings on build
+        // Suppress warnings from submodule files
+        if (
+          warning.id?.includes('wuppertal-collab-submodule') ||
+          warning.id?.includes('pecher-collab-submodule')
+        ) {
+          return;
+        }
+        // Suppress source map warnings on build
         if (
           warning.code === 'SOURCEMAP_ERROR' &&
           warning.id?.includes('node_modules/antd')

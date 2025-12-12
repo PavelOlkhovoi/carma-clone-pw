@@ -7,11 +7,6 @@ import { faLocationDot, faTimes } from "@fortawesome/free-solid-svg-icons";
 import type { BaseSelectRef } from "rc-select";
 
 // import IconComp from "react-cismap/commons/Icon";
-// import IconComp from "react-cismap/commons/Icon";
-// import IconComp from "react-cismap/commons/Icon";
-// import IconComp from "react-cismap/commons/Icon";
-// import IconComp from "react-cismap/commons/Icon";
-// import IconComp from "react-cismap/commons/Icon";
 
 import {
   generateOptions,
